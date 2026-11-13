@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quase Normal — laboratórios abertos de estatística e econometria no celular</title>
+<meta name="description" content="Simulações de estatística e econometria que rodam o R no navegador, inclusive no celular, na ordem de um curso: medidas-resumo, lei dos grandes números, teorema central do limite, intervalos, testes, MQO, viés de variável omitida e inferência causal. Projeto de extensão da UERJ, uso livre para ensino.">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<div class="wrap">
+<div class="voltar">projeto de extensão da UERJ · <a href="#ensina">para quem ensina</a></div>
+
+<h1>Quase Normal</h1>
+<p class="codigo">laboratórios abertos de estatística e econometria no celular</p>
+
+<p class="nome"><b>O nome.</b> Quando a amostra cresce, a média dela fica quase normal, qualquer
+que seja o formato da população. É o Teorema Central do Limite, e é o tipo de coisa que aqui
+você vê acontecer, em vez de só ler.</p>
+
+<p>Cada laboratório é uma simulação: você escolhe o mundo, isto é, define como é a população
+de verdade; sorteia dados dela e vê o que a estatística encontra neles. O R (o programa de
+estatística) roda de verdade dentro do navegador, no celular, sem instalar nada.</p>
+
+<div class="aviso">
+O primeiro acesso baixa o R (cerca de 11 MB) e leva de 10 a 30 segundos; depois fica rápido.
+Em sala, vale abrir com o Wi-Fi ligado.
+</div>
+
+<h2>A trilha</h2>
+<p class="secao-nota">Os laboratórios seguem a ordem de um curso: estatística primeiro,
+econometria depois. Comece de onde estiver.</p>
+
+<h3>Estatística</h3>
+
+<div class="item">
+  <div class="tit"><span class="n">1</span> Medidas-resumo</div>
+  <div class="desc">Média, mediana, desvio-padrão e boxplot sobre a mesma amostra: quando
+  coincidem, quando discordam, e o que um único valor extremo faz com cada um deles.</div>
+  <div class="baixar"><a href="laboratorio-descritiva-webr.html">Abrir &rarr;</a></div>
+</div>
+
+<div class="item breve">
+  <div class="tit"><span class="n">2</span> Probabilidade <span class="tag">em construção</span></div>
+  <div class="desc">Probabilidade condicional e independência, com o exame médico que dá
+  resultado positivo em quem não tem a doença.</div>
+</div>
+
+<div class="item breve">
+  <div class="tit"><span class="n">3</span> Variáveis aleatórias e distribuições <span class="tag">em construção</span></div>
+  <div class="desc">Binomial, Poisson, normal e exponencial: mexa nos parâmetros e veja a
+  média, a variância e o formato mudarem.</div>
+</div>
+
+<div class="item">
+  <div class="tit"><span class="n">4</span> Lei dos grandes números</div>
+  <div class="desc">Escolha o tamanho da amostra e veja a média amostral assentar sobre a média
+  da população. Este laboratório é a primeira aba da página Revisão estatística interativa, que
+  reúne três laboratórios; os outros dois estão no item 8.</div>
+  <div class="baixar"><a href="revisao-estatistica-webr.html">Abrir &rarr;</a></div>
+</div>
+
+<div class="item">
+  <div class="tit"><span class="n">5</span> Teorema Central do Limite</div>
+  <div class="desc">Sorteie amostras de uma população com qualquer formato e veja as médias
+  formarem um sino, com a largura que a teoria previu. Inclui o contraexemplo em que o teorema
+  falha.</div>
+  <div class="baixar"><a href="laboratorio-tcl-webr.html">Abrir &rarr;</a></div>
+</div>
+
+<div class="item">
+  <div class="tit"><span class="n">6</span> Intervalos de confiança</div>
+  <div class="desc">Cem pesquisas amostrais do mesmo mundo, cada uma com seu intervalo.
+  Quantas capturam a média verdadeira? Veja o que muda quando você mexe no nível de confiança,
+  no tamanho da amostra e na dispersão da população.</div>
+  <div class="baixar"><a href="laboratorio-intervalos-webr.html">Abrir &rarr;</a></div>
+</div>
+
+<div class="item">
+  <div class="tit"><span class="n">7</span> Testes de hipótese</div>
+  <div class="desc">Dois mil pesquisadores testam a mesma hipótese num mundo cuja verdade
+  você conhece. Quando não há efeito, 5% rejeitam a hipótese mesmo assim, e os p-valores se
+  espalham por igual entre 0 e 1. Quando há efeito, a fração que o detecta é o poder do teste.</div>
+  <div class="baixar"><a href="laboratorio-hipoteses-webr.html">Abrir &rarr;</a></div>
+</div>
+
+<div class="item">
+  <div class="tit"><span class="n">8</span> Correlação e correlação parcial</div>
+  <div class="desc">Treine o olho para reconhecer uma correlação de 0,3 e uma de 0,8, e veja
+  o que sobra da correlação entre duas variáveis quando se desconta uma terceira. São a
+  segunda e a terceira abas da página Revisão estatística interativa, a mesma do item 4.</div>
+  <div class="baixar"><a href="revisao-estatistica-webr.html">Abrir &rarr;</a></div>
+</div>
+
+<h3>Econometria</h3>
+
+<div class="item">
+  <div class="tit"><span class="n">9</span> Mínimos quadrados ordinários (MQO): a reta que minimiza os quadrados</div>
+  <div class="desc">Ponha a reta onde quiser e veja a distância de cada ponto à reta (o resíduo)
+  virar um quadrado desenhado na tela: o método é a busca pela menor soma dessas áreas. Inclui
+  o que o R² é e o que ele não é.</div>
+  <div class="baixar"><a href="laboratorio-mqo-webr.html">Abrir &rarr;</a></div>
+</div>
+
+<div class="item breve">
+  <div class="tit"><span class="n">10</span> Inferência sobre um coeficiente <span class="tag">em construção</span></div>
+  <div class="desc">O teste t, o p-valor e o intervalo de confiança de um coeficiente de
+  regressão, com o mesmo motor do laboratório de testes de hipótese.</div>
+</div>
+
+<div class="item">
+  <div class="tit"><span class="n">11</span> Viés de variável omitida</div>
+  <div class="desc">Seis cenários mostrando quando e por que a variável omitida distorce a
+  estimativa. Você escolhe o mundo; a tela mostra, lado a lado, o que a regressão encontra
+  quando inclui essa variável e quando a omite.</div>
+  <div class="baixar"><a href="laboratorio-vies-webr.html">Abrir &rarr;</a></div>
+</div>
+
+<div class="item">
+  <div class="tit"><span class="n">12</span> Seis ferramentas da inferência causal</div>
+  <div class="desc">Sorteio de quem recebe o tratamento, variáveis de controle, painel com
+  efeitos fixos, variáveis instrumentais, regressão descontínua e diferenças em diferenças.
+  Cada aba mostra o mundo em equações, a hipótese que precisa valer para a técnica funcionar,
+  os dados de cada indivíduo sorteado e o método ingênuo errando enquanto a técnica conserta.</div>
+  <div class="baixar"><a href="laboratorio-tentativas-webr.html">Abrir &rarr;</a></div>
+</div>
+
+<h3>Fora da trilha</h3>
+
+<div class="item">
+  <div class="tit">Curvas de nível</div>
+  <div class="desc">Matemática para economia. Uma função z = f(x, y) é uma superfície; a curva
+  de nível é o corte horizontal projetado no plano. Veja superfície e mapa lado a lado, e
+  depois receba só o mapa e tente estimar a superfície antes de revelar.</div>
+  <div class="baixar"><a href="laboratorio-curvas-nivel-webr.html">Abrir &rarr;</a></div>
+</div>
+
+<h2 id="ensina">Para quem ensina</h2>
+
+<p>O material é de uso livre em sala, sob
+<a href="https://creativecommons.org/licenses/by-nc/4.0/deed.pt-br">CC BY-NC 4.0</a>:
+basta enviar o link para a turma, e cada aluno abre no próprio aparelho. Adaptações são
+permitidas, com indicação do que foi alterado.</p>
+
+<p>Quase Normal é o site do projeto de extensão <i>Métodos Quantitativos no Celular:
+laboratórios interativos e abertos de estatística e econometria</i> (UERJ, SIEXT 8515/2026),
+coordenado por Marcio Gold Firmo, professor da Faculdade de Ciências Econômicas da UERJ.
+Dúvidas, sugestões de novos laboratórios e relatos de uso em sala são bem-vindos:
+marciogoldfirmo [at] gmail [dot] com.</p>
+
+<hr>
+<footer>© Marcio Gold Firmo · Uso livre para ensino, sob
+<a href="https://creativecommons.org/licenses/by-nc/4.0/deed.pt-br">CC BY-NC 4.0</a>
+— cite a autoria; uso comercial não autorizado.
+<a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
+Tecnologia: <a href="https://docs.r-wasm.org/webr/latest/">webR</a>, uma versão do R que roda
+dentro do navegador.
+</footer>
+</div>
+</body>
+</html>
