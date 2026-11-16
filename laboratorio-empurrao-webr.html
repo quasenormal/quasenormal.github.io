@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratório do Empurrão de Fora — R no navegador</title>
+<meta name="description" content="A variável instrumental em linguagem simples: quando não dá para sortear quem recebe, às vezes dá para achar um sorteio escondido, como uma bolsa sorteada que empurra a escolaridade. Só o pedaço que veio do empurrão serve para medir o efeito. R rodando no navegador, inclusive no celular.">
+<style>
+  :root { color-scheme: light; --azul:#1a4f8b; --cinza:#f4f5f7; --borda:#d8dce2; --verde:#157347; --verm:#b02a37; }
+  * { box-sizing: border-box; }
+  body { background: #fff; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+         margin: 0; padding: 16px; max-width: 820px; margin-inline: auto;
+         color: #1c2430; line-height: 1.5; }
+  h1 { font-size: 1.3rem; color: var(--azul); margin-bottom: 4px; }
+  h2 { font-size: 1.02rem; color: var(--azul); margin: 22px 0 6px; }
+  .sub { color: #5a6573; font-size: .92rem; margin-top: 0; }
+  .chamada { border-left: 5px solid var(--azul); background: #eef3fa; padding: 12px 14px;
+             margin: 14px 0; font-size: 1.02rem; border-radius: 0 10px 10px 0; }
+  .chamada b { color: var(--azul); }
+  .chamada p { margin: 0; } .chamada p + p { margin-top: 8px; }
+  .nota { font-size: .92rem; color: #5a6573; margin: 8px 0; }
+  .partes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; margin: 14px 0 0; }
+  .partes button { border: 1px solid var(--borda); border-radius: 10px; background: #fff;
+                   padding: 10px 12px; font-size: .9rem; cursor: pointer; color: #4a5563;
+                   text-align: left; line-height: 1.35; }
+  .partes button b { color: var(--azul); display: block; }
+  .partes button.ativa { outline: 3px solid var(--azul); background: #eef3fa; color: #1c2430; }
+  .ctl { font-size: .92rem; margin: 8px 0 4px; }
+  .opcoes { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+  .opcoes button { border: 1px solid var(--borda); background: #fff; border-radius: 8px;
+                   padding: 9px 14px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+  .opcoes button.ativo { background: var(--azul); color: #fff; border-color: var(--azul); }
+  .previsao { font-size: .95rem; background: #fffbe8; border: 1px solid #e8ddb0;
+              border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+  .botoes { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; align-items: center; }
+  .botoes button { border: 0; border-radius: 8px; padding: 12px 22px; font-size: 1rem;
+           font-weight: 600; cursor: pointer; }
+  #rodar { background: var(--azul); color: #fff; min-width: 140px; }
+  #rodar:disabled { background: #9fb3cb; cursor: wait; }
+  #resultado.desatualizado { opacity: .45; }
+  #aviso { font-size: .9rem; color: var(--verm); font-weight: 600; margin: 6px 0; min-height: 1.2em; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .card { border: 2px solid var(--borda); border-radius: 10px; padding: 10px 12px; }
+  .card h3 { margin: 0 0 4px; font-size: .9rem; }
+  .card .big { font-size: 1.7rem; font-weight: 800; font-family: ui-monospace, Consolas, monospace; }
+  .card.errado { border-color: var(--verm); } .card.errado h3 { color: var(--verm); }
+  .card.certo { border-color: var(--verde); } .card.certo h3 { color: var(--verde); }
+  .card .nota { font-size: .8rem; color: #5a6573; margin: 0; }
+  #verifica { font-size: .92rem; margin-top: 8px; }
+  #graficos canvas { width: 100%; height: auto; border: 1px solid var(--borda);
+                     border-radius: 10px; margin-top: 12px; background: #fff; display: block; }
+  .escondido { display: none !important; }
+  details { margin-top: 12px; font-size: .88rem; }
+  details pre { background: #10151c; color: #d7e3f0; border-radius: 10px; padding: 12px;
+                font-size: .8rem; overflow-x: auto; white-space: pre-wrap; }
+  details.eq { background: var(--cinza); border: 1px solid var(--borda); border-radius: 10px; padding: 8px 12px; }
+  details.eq summary { cursor: pointer; font-weight: 600; }
+  details.eq p { margin: .5rem 0; }
+  .f { font-family: ui-monospace, Consolas, monospace; font-size: .86rem; background: #fff; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--borda); }
+  .box { background: var(--cinza); border: 1px solid var(--borda);
+         border-radius: 10px; padding: 12px; margin: 12px 0; font-size: .92rem; }
+  footer { color: #5a6573; font-size: .85rem; margin-top: 24px;
+           border-top: 1px solid var(--borda); padding-top: 12px; }
+  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>Laboratório do Empurrão de Fora</h1>
+<p class="sub">Econometria e avaliação de impacto. Esta página roda no navegador, inclusive no celular.</p>
+
+<div class="chamada">
+  <p><b>Quando não dá para sortear quem recebe, às vezes dá para achar um sorteio escondido.</b>
+  Em linguagem simples: a escolaridade de uma pessoa depende da habilidade dela, que também mexe no
+  salário, e por isso comparar o salário de quem estudou mais com o de quem estudou menos mistura o
+  efeito da escolaridade com o efeito da habilidade. Mas se uma bolsa sorteada
+  empurrou a escolaridade de algumas pessoas, o pedaço da escolaridade que veio da bolsa é limpo de
+  habilidade, e só ele serve para medir o efeito. Esse método se chama variável instrumental, e
+  depende de duas condições: a bolsa precisa mexer de verdade na escolaridade, e não pode mexer no
+  salário por nenhum outro caminho.</p>
+  <p>Nesta página você mexe no mundo simulado e vê a regressão simples errar enquanto o método conserta.
+  Depois quebra a segunda condição e vê o método errar sem avisar.</p>
+</div>
+
+<h2 id="h_metodo" class="escondido">1. Escolha o método</h2>
+<div class="partes escondido" id="partes"></div>
+
+<p class="nota" id="mundo"></p>
+
+<h2 id="h_mundo">1. Escolha o mundo</h2>
+<div id="controles"></div>
+
+<div class="previsao" id="previsao"></div>
+
+<div class="botoes">
+  <button id="rodar" disabled>carregando o R…</button>
+  <span class="nota" style="margin:0">Cada clique sorteia dados novos.</span>
+</div>
+<div id="aviso"></div>
+
+<div id="resultado">
+  <div class="cards">
+    <div class="card errado"><h3 id="lbl_a">MÉTODO INGÊNUO</h3>
+      <div class="big" id="res_a">—</div>
+      <p class="nota" id="nota_a"></p></div>
+    <div class="card certo"><h3 id="lbl_b">O MÉTODO</h3>
+      <div class="big" id="res_b">—</div>
+      <p class="nota" id="nota_b"></p></div>
+  </div>
+  <div id="verifica"></div>
+  <div id="graficos"></div>
+</div>
+
+<details class="eq" id="detalhes"><summary>Para quem já viu as equações</summary><div id="detalhes_corpo"></div></details>
+
+<details><summary>Ver o código R que está rodando (muda com os controles)</summary>
+<pre id="codigoview"></pre></details>
+
+<section class="box">
+  <h2 style="margin-top:0">Como citar esta página</h2>
+  <p style="margin:.3rem 0">
+    FIRMO, Marcio Gold. <i>Laboratório do Empurrão de Fora</i>. 2026.
+    Disponível em: https://quasenormal.github.io/laboratorio-empurrao-webr.html
+  </p>
+  <p style="margin:.3rem 0 0">
+    Uso livre para ensino, com citação da autoria; uso comercial não autorizado
+    (<a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">licença</a>).
+    Se adaptar o material, indique o que foi alterado.
+  </p>
+</section>
+
+<footer>
+  Esta página tem companheiras na trilha do <a href="./">Quase Normal</a>: o
+  <a href="laboratorio-comparar-consigo-webr.html">Laboratório de Comparar Cada Um Consigo Mesmo</a> (o passo anterior) e o <a href="laboratorio-vies-webr.html">Laboratório do Viés de Variável Omitida</a>.
+  Tecnologia: <a href="https://docs.r-wasm.org/webr/latest/">webR</a>, uma versão do R que roda
+  dentro do navegador.
+  <p style="margin:.7rem 0 0">
+    <a href="./">Quase Normal</a> · projeto de extensão da UERJ · © Marcio Gold Firmo · Uso livre para ensino, sob
+    <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.pt-br">CC BY-NC 4.0</a>
+    — cite a autoria; uso comercial não autorizado.
+    <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
+  </p>
+</footer>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const fmt = x => (x === null || Number.isNaN(x)) ? "—" : x.toFixed(2).replace(".", ",");
+const TIT = `titulos <- function(principal, explicacao) {
+  title(main = principal, line = 2.4)
+  mtext(explicacao, side = 3, line = 0.6, cex = 0.9, col = "grey30")
+}`;
+
+// Cada metodo: o mundo em palavras, os controles (grupos de botoes), a previsao, o codigo R,
+// os cartoes, o texto depois de rodar e a dobra com as equacoes.
+const PARTES = [
+  { id: "iv", nome: "Variável instrumental", resumo: "Usar só o pedaço da escolaridade que veio de uma bolsa sorteada.",
+    mundo: "O mundo simulado tem 1.500 pessoas. Um ano a mais de escolaridade aumenta o salário em 0,5; a habilidade aumenta o salário e a escolaridade. Uma bolsa sorteada empurra a escolaridade para cima. A ferramenta usa só o pedaço da escolaridade causado pela bolsa, que é limpo de habilidade porque a bolsa foi sorteada.",
+    controles: [
+      { id: "pi", rotulo: "Quantos anos de escolaridade a bolsa acrescenta (a força do empurrão):", valores: [0.3, 1.5, 3], inicial: 1.5, r: v => fmt(v) },
+      { id: "kappa", rotulo: "Quebra da condição: a bolsa também aumenta o salário por outro caminho (entra no currículo, por exemplo):", valores: [0, 1, 3], inicial: 0, r: v => v === 0 ? "nada (0)" : fmt(v) },
+    ],
+    previsao: v => `<b>O que esperar:</b> o efeito verdadeiro é 0,50. A regressão simples deve encontrar mais que 0,50, porque usa também a ` +
+      `parte da escolaridade que vem da habilidade. ` +
+      (v.kappa === 0 ? `A ferramenta deve recuperar perto de 0,50` : `A ferramenta deve errar, porque a bolsa mexe no salário por fora da escolaridade e o método atribui esse pedaço à escolaridade`) +
+      (v.pi <= 0.3 ? `, mas com um empurrão fraco a estimativa balança muito de uma rodada para outra.` : `.`),
+    cards: () => ({ a: ["REGRESSÃO SIMPLES", "Previsto: acima de 0,50."], b: ["SÓ O PEDAÇO QUE VEIO DA BOLSA", "Previsto: 0,50 quando a bolsa não mexe no salário por outro caminho."] }),
+    codigo: (v, s) => `set.seed(${s})
+n <- 1500
+empurrao <- ${v.pi}; por_fora <- ${v.kappa}
+habilidade <- rnorm(n)
+bolsa <- rbinom(n, 1, 0.5)                                   # sorteada
+escolaridade <- 8 + empurrao * bolsa + 2 * habilidade + rnorm(n)
+salario <- 5 + 0.5 * escolaridade + 3 * habilidade + por_fora * bolsa + rnorm(n, 0, 2)
+simples <- lm(salario ~ escolaridade)
+# a ferramenta: a diferenca de salario entre quem ganhou e nao ganhou a bolsa,
+# dividida pela diferenca de escolaridade entre os mesmos grupos
+instr <- (mean(salario[bolsa == 1]) - mean(salario[bolsa == 0])) / (mean(escolaridade[bolsa == 1]) - mean(escolaridade[bolsa == 0]))
+cat("RES", coef(simples)[2], instr, mean(escolaridade[bolsa == 1]) - mean(escolaridade[bolsa == 0]), "\\n")
+
+mx0 <- mean(escolaridade[bolsa == 0]); my0 <- mean(salario[bolsa == 0]); mx1 <- mean(escolaridade[bolsa == 1]); my1 <- mean(salario[bolsa == 1])
+par(mar = c(4.2, 4.2, 4.4, 0.8))
+${TIT}
+plot(escolaridade, salario, pch = 16, col = ifelse(bolsa == 1, adjustcolor("#1a4f8b", 0.35), adjustcolor("gray50", 0.3)), cex = 0.6, main = "", xlab = "escolaridade (anos)", ylab = "salário")
+abline(simples, col = "red", lwd = 3, lty = 2)
+points(c(mx0, mx1), c(my0, my1), pch = 21, bg = c("gray30", "#1a4f8b"), cex = 2.6, lwd = 2)
+abline(a = my0 - instr * mx0, b = instr, col = "forestgreen", lwd = 3.5)
+abline(a = mean(salario) - 0.5 * mean(escolaridade), b = 0.5, col = "blue", lwd = 2, lty = 3)
+legend("topleft", bty = "n", lwd = 3, lty = c(2, 1, 3), col = c("red", "forestgreen", "blue"),
+       legend = c(sprintf("regressão simples: %.2f", coef(simples)[2]), sprintf("reta entre as médias dos dois grupos: %.2f", instr), "efeito verdadeiro: 0,50"), cex = 0.88)
+titulos("Cada ponto é uma pessoa; em azul, quem ganhou a bolsa", "Os dois círculos grandes são as médias de quem ganhou e de quem não ganhou a bolsa")`,
+    verifica: (r, v) => `<b>Previsto e observado:</b> a regressão simples encontrou <b>${fmt(r[0])}</b>; a ferramenta, <b>${fmt(r[1])}</b>; o efeito ` +
+      `verdadeiro é 0,50. A bolsa acrescentou <b>${fmt(r[2])}</b> ano de escolaridade em média, o que dá para conferir nos dados. ` +
+      `<b>No gráfico:</b> a reta verde liga as médias dos dois grupos; o número que a ferramenta dá é exatamente a inclinação dessa reta. ` +
+      (v.kappa > 0 ? `Aqui a bolsa também mexeu no salário por fora, e a ferramenta errou sem avisar: que a bolsa não mexa no salário por outro caminho é uma condição que não dá para conferir nos dados, só por argumento.` : ``),
+    detalhes: `<p><span class="f">X = 8 + π·Z_b + 2·hab + η</span> e <span class="f">Y = 5 + 0,5·X + 3·hab + κ·Z_b + e</span>, com Z_b a bolsa sorteada, π o empurrão da bolsa e κ o caminho por fora (os dois controles acima).</p>
+      <p>Variável instrumental em dois estágios: primeiro <span class="f">X = a₀ + π·Z_b</span>, guardando o X previsto; depois <span class="f">Y = a₁ + b·X̂</span>. Com um instrumento binário, isso é a conta de Wald, a inclinação da reta que liga as médias dos dois grupos. Condições: relevância, <span class="f">Cov(Z_b, X) ≠ 0</span> (testável), e exclusão, <span class="f">Cov(Z_b, u) = 0</span> (não testável); com κ ≠ 0 o termo κ·Z_b entra em u e a exclusão cai.</p>` },
+
+];
+
+// ---------- estado ----------
+let parte = PARTES[0];
+let valores = {};
+let seed = Math.floor(Math.random() * 100000);
+let rodou = false;
+
+function montaParte(p) {
+  parte = p; valores = {}; rodou = false;
+  document.querySelectorAll("#partes button").forEach(b => b.classList.toggle("ativa", b.dataset.id === p.id));
+  $("mundo").textContent = p.mundo;
+  const c = $("controles"); c.innerHTML = "";
+  p.controles.forEach(ctl => {
+    valores[ctl.id] = ctl.inicial;
+    const r = document.createElement("div"); r.className = "ctl"; r.textContent = ctl.rotulo; c.appendChild(r);
+    const g = document.createElement("div"); g.className = "opcoes"; g.id = "g_" + ctl.id;
+    ctl.valores.forEach(v => {
+      const b = document.createElement("button"); b.textContent = ctl.r(v); b.dataset.v = String(v);
+      b.classList.toggle("ativo", v === ctl.inicial);
+      b.addEventListener("click", () => {
+        valores[ctl.id] = v;
+        g.querySelectorAll("button").forEach(x => x.classList.toggle("ativo", x.dataset.v === String(v)));
+        atualizaPainel(); marcaDesatualizado();
+      });
+      g.appendChild(b);
+    });
+    c.appendChild(g);
+  });
+  $("res_a").textContent = "—"; $("res_b").textContent = "—"; $("verifica").innerHTML = ""; $("graficos").innerHTML = "";
+  $("aviso").textContent = ""; $("resultado").classList.remove("desatualizado");
+  $("detalhes_corpo").innerHTML = p.detalhes;
+  atualizaPainel();
+}
+function atualizaPainel() {
+  $("previsao").innerHTML = parte.previsao(valores);
+  const c = parte.cards(valores);
+  $("lbl_a").textContent = c.a[0]; $("nota_a").textContent = c.a[1];
+  $("lbl_b").textContent = c.b[0]; $("nota_b").textContent = c.b[1];
+  $("codigoview").textContent = parte.codigo(valores, seed);
+}
+function marcaDesatualizado() {
+  if (!rodou) return;
+  $("resultado").classList.add("desatualizado");
+  $("aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o resultado novo.";
+}
+PARTES.forEach((p, i) => {
+  const b = document.createElement("button"); b.dataset.id = p.id;
+  b.innerHTML = `<b>${i + 1}. ${p.nome}</b>${p.resumo}`;
+  b.addEventListener("click", () => montaParte(p));
+  $("partes").appendChild(b);
+});
+$("rodar").addEventListener("click", rodar);
+
+let webR, shelter;
+async function iniciar() {
+  const inicio = Date.now();
+  const relogio = setInterval(() => { $("rodar").textContent = `carregando o R… ${Math.round((Date.now() - inicio) / 1000)} s`; }, 1000);
+  try {
+    const { WebR } = await import("https://webr.r-wasm.org/latest/webr.mjs");
+    webR = new WebR(); await webR.init(); shelter = await new webR.Shelter();
+    clearInterval(relogio);
+    $("rodar").innerHTML = "&#9654; Rodar"; $("rodar").disabled = false;
+  } catch (e) {
+    clearInterval(relogio);
+    $("rodar").textContent = "o R não carregou";
+    $("aviso").textContent = "O R não carregou: " + e.message + ". Verifique a conexão e recarregue a página.";
+  }
+}
+async function rodar() {
+  seed = Math.floor(Math.random() * 100000);
+  atualizaPainel();
+  $("rodar").disabled = true; $("rodar").textContent = "sorteando…";
+  $("aviso").textContent = ""; $("resultado").classList.remove("desatualizado");
+  $("graficos").innerHTML = "";
+  try {
+    const captura = await shelter.captureR(parte.codigo(valores, seed), {
+      withAutoprint: false, captureStreams: true, captureConditions: true,
+      captureGraphics: { width: 800, height: 470, bg: "white", pointsize: 13 }
+    });
+    let r = null;
+    for (const l of captura.output) if (l.type === "stdout" && l.data.startsWith("RES")) r = l.data.trim().split(/\s+/).slice(1).map(parseFloat);
+    if (r) {
+      $("res_a").textContent = fmt(r[0]);
+      $("res_b").textContent = fmt(parte.id === "did" ? r[2] : r[1]);
+      $("verifica").innerHTML = parte.verifica(r, valores);
+    }
+    for (const img of captura.images) {
+      const cv = document.createElement("canvas");
+      cv.width = img.width; cv.height = img.height;
+      cv.getContext("2d").drawImage(img, 0, 0);
+      $("graficos").appendChild(cv);
+    }
+    rodou = true;
+    $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) {
+    $("aviso").textContent = "Erro na execução: " + e.message;
+  } finally {
+    if (shelter) await shelter.purge();
+    $("rodar").innerHTML = "&#9654; Rodar"; $("rodar").disabled = false;
+  }
+}
+
+montaParte(PARTES[0]);
+iniciar();
+</script>
+</body>
+</html>

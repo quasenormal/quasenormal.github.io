@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratório de Comparar Iguais — R no navegador</title>
+<meta name="description" content="Comparar iguais, em linguagem simples: sortear quem recebe, comparar pessoas com a mesma nota num teste, ou comparar quem ficou logo acima e logo abaixo de um corte. Em cada método, a comparação ingênua erra e o método conserta, até a condição dele ser quebrada. R rodando no navegador, inclusive no celular.">
+<style>
+  :root { color-scheme: light; --azul:#1a4f8b; --cinza:#f4f5f7; --borda:#d8dce2; --verde:#157347; --verm:#b02a37; }
+  * { box-sizing: border-box; }
+  body { background: #fff; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+         margin: 0; padding: 16px; max-width: 820px; margin-inline: auto;
+         color: #1c2430; line-height: 1.5; }
+  h1 { font-size: 1.3rem; color: var(--azul); margin-bottom: 4px; }
+  h2 { font-size: 1.02rem; color: var(--azul); margin: 22px 0 6px; }
+  .sub { color: #5a6573; font-size: .92rem; margin-top: 0; }
+  .chamada { border-left: 5px solid var(--azul); background: #eef3fa; padding: 12px 14px;
+             margin: 14px 0; font-size: 1.02rem; border-radius: 0 10px 10px 0; }
+  .chamada b { color: var(--azul); }
+  .chamada p { margin: 0; } .chamada p + p { margin-top: 8px; }
+  .nota { font-size: .92rem; color: #5a6573; margin: 8px 0; }
+  .partes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; margin: 14px 0 0; }
+  .partes button { border: 1px solid var(--borda); border-radius: 10px; background: #fff;
+                   padding: 10px 12px; font-size: .9rem; cursor: pointer; color: #4a5563;
+                   text-align: left; line-height: 1.35; }
+  .partes button b { color: var(--azul); display: block; }
+  .partes button.ativa { outline: 3px solid var(--azul); background: #eef3fa; color: #1c2430; }
+  .ctl { font-size: .92rem; margin: 8px 0 4px; }
+  .opcoes { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+  .opcoes button { border: 1px solid var(--borda); background: #fff; border-radius: 8px;
+                   padding: 9px 14px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+  .opcoes button.ativo { background: var(--azul); color: #fff; border-color: var(--azul); }
+  .previsao { font-size: .95rem; background: #fffbe8; border: 1px solid #e8ddb0;
+              border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+  .botoes { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; align-items: center; }
+  .botoes button { border: 0; border-radius: 8px; padding: 12px 22px; font-size: 1rem;
+           font-weight: 600; cursor: pointer; }
+  #rodar { background: var(--azul); color: #fff; min-width: 140px; }
+  #rodar:disabled { background: #9fb3cb; cursor: wait; }
+  #resultado.desatualizado { opacity: .45; }
+  #aviso { font-size: .9rem; color: var(--verm); font-weight: 600; margin: 6px 0; min-height: 1.2em; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .card { border: 2px solid var(--borda); border-radius: 10px; padding: 10px 12px; }
+  .card h3 { margin: 0 0 4px; font-size: .9rem; }
+  .card .big { font-size: 1.7rem; font-weight: 800; font-family: ui-monospace, Consolas, monospace; }
+  .card.errado { border-color: var(--verm); } .card.errado h3 { color: var(--verm); }
+  .card.certo { border-color: var(--verde); } .card.certo h3 { color: var(--verde); }
+  .card .nota { font-size: .8rem; color: #5a6573; margin: 0; }
+  #verifica { font-size: .92rem; margin-top: 8px; }
+  #graficos canvas { width: 100%; height: auto; border: 1px solid var(--borda);
+                     border-radius: 10px; margin-top: 12px; background: #fff; display: block; }
+  .escondido { display: none !important; }
+  details { margin-top: 12px; font-size: .88rem; }
+  details pre { background: #10151c; color: #d7e3f0; border-radius: 10px; padding: 12px;
+                font-size: .8rem; overflow-x: auto; white-space: pre-wrap; }
+  details.eq { background: var(--cinza); border: 1px solid var(--borda); border-radius: 10px; padding: 8px 12px; }
+  details.eq summary { cursor: pointer; font-weight: 600; }
+  details.eq p { margin: .5rem 0; }
+  .f { font-family: ui-monospace, Consolas, monospace; font-size: .86rem; background: #fff; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--borda); }
+  .box { background: var(--cinza); border: 1px solid var(--borda);
+         border-radius: 10px; padding: 12px; margin: 12px 0; font-size: .92rem; }
+  footer { color: #5a6573; font-size: .85rem; margin-top: 24px;
+           border-top: 1px solid var(--borda); padding-top: 12px; }
+  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>Laboratório de Comparar Iguais</h1>
+<p class="sub">Econometria e avaliação de impacto. Esta página roda no navegador, inclusive no celular.</p>
+
+<div class="chamada">
+  <p><b>Para medir o efeito de algo, compare quem recebeu com quem não recebeu, mas só se os dois
+  grupos forem iguais no resto.</b> Em linguagem simples: comparar quem fez um treinamento com quem
+  não fez mistura o efeito do treinamento com tudo o que já era diferente entre os dois grupos. Há
+  três jeitos de garantir que eles são iguais no resto: sortear quem recebe; comparar só pessoas com
+  a mesma nota num teste de habilidade; ou comparar quem ficou logo acima e logo abaixo do corte que decide quem recebe. Cada jeito
+  depende de uma condição, e quando ela não vale o método erra.</p>
+  <p>Nesta página você escolhe o método, mexe no mundo simulado e vê a comparação ingênua errar enquanto o
+  método conserta. Depois quebra a condição e vê o método errar também.</p>
+</div>
+
+<h2 id="h_metodo">1. Escolha o método</h2>
+<div class="partes" id="partes"></div>
+
+<p class="nota" id="mundo"></p>
+
+<h2 id="h_mundo">2. Escolha o mundo</h2>
+<div id="controles"></div>
+
+<div class="previsao" id="previsao"></div>
+
+<div class="botoes">
+  <button id="rodar" disabled>carregando o R…</button>
+  <span class="nota" style="margin:0">Cada clique sorteia dados novos.</span>
+</div>
+<div id="aviso"></div>
+
+<div id="resultado">
+  <div class="cards">
+    <div class="card errado"><h3 id="lbl_a">MÉTODO INGÊNUO</h3>
+      <div class="big" id="res_a">—</div>
+      <p class="nota" id="nota_a"></p></div>
+    <div class="card certo"><h3 id="lbl_b">O MÉTODO</h3>
+      <div class="big" id="res_b">—</div>
+      <p class="nota" id="nota_b"></p></div>
+  </div>
+  <div id="verifica"></div>
+  <div id="graficos"></div>
+</div>
+
+<details class="eq" id="detalhes"><summary>Para quem já viu as equações</summary><div id="detalhes_corpo"></div></details>
+
+<details><summary>Ver o código R que está rodando (muda com os controles)</summary>
+<pre id="codigoview"></pre></details>
+
+<section class="box">
+  <h2 style="margin-top:0">Como citar esta página</h2>
+  <p style="margin:.3rem 0">
+    FIRMO, Marcio Gold. <i>Laboratório de Comparar Iguais</i>. 2026.
+    Disponível em: https://quasenormal.github.io/laboratorio-comparar-iguais-webr.html
+  </p>
+  <p style="margin:.3rem 0 0">
+    Uso livre para ensino, com citação da autoria; uso comercial não autorizado
+    (<a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">licença</a>).
+    Se adaptar o material, indique o que foi alterado.
+  </p>
+</section>
+
+<footer>
+  Esta página tem companheiras na trilha do <a href="./">Quase Normal</a>: o
+  <a href="laboratorio-vies-webr.html">Laboratório do Viés de Variável Omitida</a> (o passo anterior) e o <a href="laboratorio-comparar-consigo-webr.html">Laboratório de Comparar Cada Um Consigo Mesmo</a> (o passo seguinte).
+  Tecnologia: <a href="https://docs.r-wasm.org/webr/latest/">webR</a>, uma versão do R que roda
+  dentro do navegador.
+  <p style="margin:.7rem 0 0">
+    <a href="./">Quase Normal</a> · projeto de extensão da UERJ · © Marcio Gold Firmo · Uso livre para ensino, sob
+    <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.pt-br">CC BY-NC 4.0</a>
+    — cite a autoria; uso comercial não autorizado.
+    <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
+  </p>
+</footer>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const fmt = x => (x === null || Number.isNaN(x)) ? "—" : x.toFixed(2).replace(".", ",");
+const TIT = `titulos <- function(principal, explicacao) {
+  title(main = principal, line = 2.4)
+  mtext(explicacao, side = 3, line = 0.6, cex = 0.9, col = "grey30")
+}`;
+
+// Cada metodo: o mundo em palavras, os controles (grupos de botoes), a previsao, o codigo R,
+// os cartoes, o texto depois de rodar e a dobra com as equacoes.
+const PARTES = [
+  { id: "sorteio", nome: "Sorteio", resumo: "Quem recebe o treinamento é escolhido por sorteio.",
+    mundo: "O mundo simulado tem 600 pessoas. Um treinamento aumenta o salário num tanto que você escolhe, e a habilidade também aumenta o salário por conta própria. Quando a inscrição é voluntária, os mais hábeis se inscrevem mais. A ferramenta é sortear quem faz o treinamento.",
+    controles: [
+      { id: "tau", rotulo: "Quanto o treinamento aumenta o salário, de verdade:", valores: [0, 2, 4], inicial: 2, r: v => v === 0 ? "nada (0)" : fmt(v) },
+      { id: "gama", rotulo: "Quanto os mais hábeis se inscrevem mais, na inscrição voluntária:", valores: [0, 1, 3], inicial: 1, r: v => v === 0 ? "nada (0)" : fmt(v) },
+    ],
+    previsao: v => `<b>O que esperar:</b> o efeito verdadeiro é ${fmt(v.tau)}. Na inscrição voluntária, comparar quem fez o treinamento com quem não fez deve ` +
+      (v.gama > 0 ? `encontrar um efeito maior que ${fmt(v.tau)}, porque quem se inscreveu já era mais hábil, e a habilidade também paga. ` : `acertar, porque aqui a habilidade não decide quem se inscreve. `) +
+      `No sorteio, comparar quem fez com quem não fez deve encontrar perto de ${fmt(v.tau)}: o sorteio não olha a habilidade.`,
+    cards: v => ({ a: ["INSCRIÇÃO VOLUNTÁRIA: QUEM FEZ MENOS QUEM NÃO FEZ", `Previsto: ${v.gama > 0 ? "acima de " : ""}${fmt(v.tau)}.`],
+                   b: ["SORTEIO: QUEM FEZ MENOS QUEM NÃO FEZ", `Previsto: perto de ${fmt(v.tau)}, o efeito verdadeiro.`] }),
+    codigo: (v, s) => `set.seed(${s})
+n <- 600
+efeito <- ${v.tau}; auto_selecao <- ${v.gama}
+habilidade <- rnorm(n)
+# inscricao voluntaria: quem tem habilidade e vontade suficientes entra
+T_vol <- as.numeric(auto_selecao * habilidade + rnorm(n, 0, 0.8) > 0)
+Y_vol <- 10 + efeito * T_vol + 3 * habilidade + rnorm(n, 0, 2)
+# sorteio: cara ou coroa
+T_sort <- rbinom(n, 1, 0.5)
+Y_sort <- 10 + efeito * T_sort + 3 * habilidade + rnorm(n, 0, 2)
+ingenuo <- mean(Y_vol[T_vol == 1]) - mean(Y_vol[T_vol == 0])
+sorteio <- mean(Y_sort[T_sort == 1]) - mean(Y_sort[T_sort == 0])
+cat("RES", ingenuo, sorteio, mean(habilidade[T_vol == 1]) - mean(habilidade[T_vol == 0]), "\\n")
+
+cores <- c("#8ecae6", "#f4a261", "#b02a37")[cut(habilidade, quantile(habilidade, c(0, 1/3, 2/3, 1)), include.lowest = TRUE, labels = FALSE)]
+x_vol  <- ifelse(T_vol == 1, 2, 1) + runif(n, -0.28, 0.28)
+x_sort <- ifelse(T_sort == 1, 4.6, 3.6) + runif(n, -0.28, 0.28)
+par(mar = c(3.6, 4.2, 4.4, 0.8))
+${TIT}
+plot(NULL, xlim = c(0.5, 5.2), ylim = range(c(Y_vol, Y_sort)), xaxt = "n", xlab = "", ylab = "salário", main = "")
+axis(1, at = c(1, 2, 3.6, 4.6), labels = c("voluntários:\\nnão fez", "voluntários:\\nfez", "sorteio:\\nnão fez", "sorteio:\\nfez"), cex.axis = 0.85, padj = 0.6)
+abline(v = 2.8, col = "gray70", lty = 2)
+points(x_vol, Y_vol, pch = 16, col = adjustcolor(cores, 0.55), cex = 0.62)
+points(x_sort, Y_sort, pch = 16, col = adjustcolor(cores, 0.55), cex = 0.62)
+segments(c(0.75, 1.75, 3.35, 4.35), c(mean(Y_vol[T_vol == 0]), mean(Y_vol[T_vol == 1]), mean(Y_sort[T_sort == 0]), mean(Y_sort[T_sort == 1])),
+         c(1.25, 2.25, 3.85, 4.85), c(mean(Y_vol[T_vol == 0]), mean(Y_vol[T_vol == 1]), mean(Y_sort[T_sort == 0]), mean(Y_sort[T_sort == 1])), lwd = 4)
+legend("topleft", bty = "n", pch = 16, col = c("#8ecae6", "#f4a261", "#b02a37"), legend = c("habilidade baixa", "habilidade média", "habilidade alta"), cex = 0.85)
+text(1.5, max(Y_vol), paste0("diferença = ", formatC(ingenuo, format = "f", digits = 2, decimal.mark = ",")), font = 2, col = "#b02a37")
+text(4.1, max(Y_sort), paste0("diferença = ", formatC(sorteio, format = "f", digits = 2, decimal.mark = ",")), font = 2, col = "#157347")
+titulos("Cada ponto é uma pessoa; a cor é a habilidade", "À esquerda, a inscrição voluntária; à direita, o sorteio. Os traços pretos são as médias de salário")`,
+    verifica: (r, v) => `<b>Previsto e observado:</b> na inscrição voluntária, a diferença de salário entre quem fez e quem não fez foi <b>${fmt(r[0])}</b>; ` +
+      `no sorteio, <b>${fmt(r[1])}</b>; o efeito verdadeiro é ${fmt(v.tau)}. <b>No gráfico:</b> na inscrição voluntária, quem fez o treinamento tem ` +
+      `habilidade média ${fmt(r[2])} acima de quem não fez (as cores mostram): os grupos já nasceram diferentes. No sorteio, os dois ` +
+      `grupos têm a mesma mistura de cores, e a diferença de salário é só o treinamento.`,
+    detalhes: `<p>Salário: <span class="f">Y = 10 + τ·T + 3·Z + e</span>, com Z a habilidade, τ o efeito verdadeiro e, abaixo, γ o quanto os mais hábeis se inscrevem mais (os dois controles acima); η é ruído.</p>
+      <p>Inscrição voluntária: <span class="f">T = 1 se γ·Z + η &gt; 0</span>. Sorteio: <span class="f">T = cara ou coroa</span>.</p>
+      <p>Os dois métodos estimam a mesma coisa, <span class="f">Y = a + b·T</span>; o que muda é como T foi gerado. A condição para a diferença de médias medir τ é <span class="f">E(u | T) = 0</span>, com u = 3Z + e. Na inscrição voluntária, T depende de Z, que está dentro de u, e a condição falha; no sorteio, T é independente de tudo e a condição vale por construção.</p>` },
+
+  { id: "controles", nome: "Variáveis de controle", resumo: "Comparar pessoas com a mesma nota num teste de habilidade.",
+    mundo: "O mundo simulado tem 1.000 pessoas. Um ano a mais de escolaridade aumenta o salário em 0,5; a habilidade aumenta o salário e anda junto com a escolaridade. Ninguém observa a habilidade de verdade, só a nota de um teste que a mede com erro. A ferramenta é pôr a nota do teste na regressão, o que compara pessoas de mesma nota.",
+    controles: [
+      { id: "lambda", rotulo: "Quão embaçado é o teste de habilidade (erro de medida):", valores: [0, 1, 2, 4], inicial: 0, r: v => v === 0 ? "nenhum erro (0)" : fmt(v) },
+    ],
+    previsao: v => `<b>O que esperar:</b> o efeito verdadeiro é 0,50. A regressão que ignora a habilidade deve encontrar perto de 1,00. ` +
+      (v.lambda === 0 ? `Com o teste sem erro, pôr a nota na regressão deve recuperar 0,50.` :
+       `Com o teste embaçado, pôr a nota na regressão só remove parte do engano: o resultado deve ficar entre 0,50 e 1,00, e tanto mais perto de 1,00 quanto pior o teste.`),
+    cards: () => ({ a: ["IGNORANDO A HABILIDADE", "Previsto: perto de 1,00."], b: ["COMPARANDO PESSOAS DE MESMA NOTA", "Previsto: 0,50 se o teste não tem erro."] }),
+    codigo: (v, s) => `set.seed(${s})
+n <- 1000
+erro_do_teste <- ${v.lambda}
+escolaridade <- rnorm(n, 10, 4)
+habilidade   <- 0.5 * escolaridade + rnorm(n, 0, 2)
+salario      <- 2 + 0.5 * escolaridade + 1 * habilidade + rnorm(n, 0, 5)
+nota_teste   <- habilidade + erro_do_teste * rnorm(n)     # o que se observa
+ignora   <- lm(salario ~ escolaridade)
+controla <- lm(salario ~ escolaridade + nota_teste)
+cat("RES", coef(ignora)[2], coef(controla)[2], "\\n")
+
+cores <- c("#8ecae6", "#f4a261", "#b02a37")[cut(habilidade, quantile(habilidade, c(0, 1/3, 2/3, 1)), include.lowest = TRUE, labels = FALSE)]
+par(mar = c(4.2, 4.2, 4.4, 0.8))
+${TIT}
+plot(escolaridade, salario, pch = 16, col = adjustcolor(cores, 0.5), cex = 0.62, main = "", xlab = "escolaridade (anos)", ylab = "salário")
+abline(ignora, col = "red", lwd = 3.5, lty = 2)
+abline(a = mean(salario) - coef(controla)[2] * mean(escolaridade), b = coef(controla)[2], col = "forestgreen", lwd = 3.5)
+abline(a = mean(salario) - 0.5 * mean(escolaridade), b = 0.5, col = "blue", lwd = 2, lty = 3)
+legend("topleft", bty = "n", lwd = 3, lty = c(2, 1, 3), col = c("red", "forestgreen", "blue"),
+       legend = c(sprintf("ignorando a habilidade: %.2f", coef(ignora)[2]), sprintf("com a nota do teste: %.2f", coef(controla)[2]), "efeito verdadeiro: 0,50"), cex = 0.9)
+titulos("Cada ponto é uma pessoa; a cor é a habilidade de verdade", "A inclinação de cada reta é o efeito que ela atribui a um ano de escolaridade")`,
+    verifica: (r, v) => `<b>Previsto e observado:</b> a regressão que ignora a habilidade encontrou <b>${fmt(r[0])}</b>; a que inclui a nota do teste, <b>${fmt(r[1])}</b>; ` +
+      `o efeito verdadeiro é 0,50. ` + (v.lambda === 0 ? `Com o teste perfeito, comparar pessoas de mesma nota é comparar pessoas de mesma habilidade, e o engano some.`
+        : `Com o teste embaçado, parte da habilidade continua escondida, e o engano volta na proporção do que o teste não captura. Escolha um erro maior e veja a reta verde se aproximar da vermelha.`),
+    detalhes: `<p><span class="f">Y = 2 + 0,5·X + 1·Z + v</span>, <span class="f">Z = 0,5·X + ν</span>, e observa-se só <span class="f">Z* = Z + λ·ξ</span>, com λ o erro do teste (o controle acima) e ξ ruído.</p>
+      <p>Método ingênuo: <span class="f">lm(Y ~ X)</span>. Controles: <span class="f">lm(Y ~ X + Z*)</span>. A condição é <span class="f">E(u | X, Z*) = 0</span>; com erro de medida, u ainda contém (Z − Z*), que anda com X, e a condição vale só em parte: a estimativa fica entre a ingênua e a verdadeira.</p>` },
+
+  { id: "rdd", nome: "Regressão descontínua", resumo: "Comparar quem ficou logo acima e logo abaixo de um corte.",
+    mundo: "O mundo simulado: 2.500 pessoas fazem uma prova; quem tira 60 ou mais ganha uma bolsa, que aumenta o salário num tanto que você escolhe; a nota também aumenta o salário por si (quem tira 90 é diferente de quem tira 30). A ferramenta compara só os vizinhos do corte: quem tirou 59 e quem tirou 61 são quase a mesma pessoa, e a única coisa que muda entre eles é a bolsa.",
+    controles: [
+      { id: "tau", rotulo: "Quanto a bolsa aumenta o salário, de verdade:", valores: [0, 3, 6], inicial: 3, r: v => v === 0 ? "nada (0)" : fmt(v) },
+      { id: "h", rotulo: "Janela em torno do corte (quantos pontos de nota para cada lado):", valores: [3, 10, 30], inicial: 10, r: v => `${v} pontos` },
+    ],
+    previsao: v => `<b>O que esperar:</b> o efeito verdadeiro é ${fmt(v.tau)}. Comparar todos os bolsistas com todos os não bolsistas deve encontrar ` +
+      `muito mais, porque bolsistas têm notas maiores e a nota também paga. O salto no corte, a diferença de salário entre quem tirou logo ` +
+      `acima e logo abaixo de 60, deve ficar perto de ${fmt(v.tau)}. ` +
+      (v.h <= 3 ? `Com a janela estreita, as pessoas comparadas são muito parecidas, mas são poucas, e o salto balança de uma rodada para outra.`
+       : v.h >= 30 ? `Com a janela larga, há muita gente, mas pessoas de nota 30 e 90 já entram na conta, e a reta que a ferramenta ajusta em cada lado do corte precisa dar conta disso.` : ``),
+    cards: () => ({ a: ["TODOS OS BOLSISTAS MENOS TODOS OS NÃO BOLSISTAS", "Previsto: muito acima do efeito verdadeiro."], b: ["O SALTO NO CORTE", "Previsto: o efeito verdadeiro."] }),
+    codigo: (v, s) => `set.seed(${s})
+n <- 2500
+efeito <- ${v.tau}; janela <- ${v.h}
+nota <- runif(n, 0, 100)
+bolsa <- as.numeric(nota >= 60)
+salario <- 10 + efeito * bolsa + 0.1 * nota + rnorm(n, 0, 1.5)
+ingenuo <- mean(salario[bolsa == 1]) - mean(salario[bolsa == 0])
+esq <- nota >= 60 - janela & nota < 60; dir <- nota >= 60 & nota <= 60 + janela
+reta_esq <- lm(salario[esq] ~ I(nota[esq] - 60)); reta_dir <- lm(salario[dir] ~ I(nota[dir] - 60))
+salto <- coef(reta_dir)[1] - coef(reta_esq)[1]     # a distancia entre as duas retas exatamente no 60
+cat("RES", ingenuo, salto, "\\n")
+
+cor_p <- rep(adjustcolor("gray70", 0.35), n)
+cor_p[esq] <- adjustcolor("#b02a37", 0.55); cor_p[dir] <- adjustcolor("#157347", 0.55)
+par(mar = c(4.2, 4.2, 4.4, 0.8))
+${TIT}
+plot(nota, salario, pch = 16, col = cor_p, cex = 0.55, main = "", xlab = "nota na prova (o corte é 60)", ylab = "salário")
+abline(v = 60, lty = 2, col = "gray40")
+xe <- seq(60 - janela, 60, length.out = 10); xd <- seq(60, 60 + janela, length.out = 10)
+lines(xe, coef(reta_esq)[1] + coef(reta_esq)[2] * (xe - 60), col = "#b02a37", lwd = 4.5)
+lines(xd, coef(reta_dir)[1] + coef(reta_dir)[2] * (xd - 60), col = "#157347", lwd = 4.5)
+legend("topleft", bty = "n", cex = 0.9, legend = c(sprintf("todos juntos: %.2f", ingenuo), sprintf("salto no corte: %.2f", salto), sprintf("efeito verdadeiro: %.2f", efeito)))
+titulos(sprintf("O salto no corte é %.2f, com uma janela de %d pontos", salto, janela), "Em cor, as pessoas dentro da janela; cada lado tem a sua reta, e o salto é a distância entre elas no 60")`,
+    verifica: (r, v) => `<b>Previsto e observado:</b> comparar todos os bolsistas com todos os não bolsistas deu <b>${fmt(r[0])}</b>; o salto no corte deu <b>${fmt(r[1])}</b>; o efeito verdadeiro ` +
+      `é ${fmt(v.tau)}. <b>No gráfico:</b> a nuvem sobe com a nota, e é por isso que comparar todos mistura a bolsa com a nota. No corte, só a ` +
+      `bolsa muda, e o salto entre as duas retas mede o efeito dela. Mude a janela e veja o dilema: com a janela estreita, as pessoas comparadas são mais ` +
+      `parecidas, mas são menos; com a janela larga, há mais gente, mas menos parecida.`,
+    detalhes: `<p><span class="f">Y = 10 + τ·1(nota ≥ 60) + 0,1·nota + u</span>.</p>
+      <p>Na janela <span class="f">|nota − 60| ≤ h</span>, ajusta-se uma reta de cada lado, <span class="f">Y = a_e + b_e·(nota − 60)</span> e <span class="f">Y = a_d + b_d·(nota − 60)</span>; o efeito é <span class="f">a_d − a_e</span>, os dois valores previstos exatamente em 60. A condição é continuidade: <span class="f">E(u | nota)</span> não dá salto em 60; só o tratamento salta. Nada além da bolsa pode mudar exatamente no 60, nem manipulação de nota nem outra política com o mesmo corte.</p>` },
+
+];
+
+// ---------- estado ----------
+let parte = PARTES[0];
+let valores = {};
+let seed = Math.floor(Math.random() * 100000);
+let rodou = false;
+
+function montaParte(p) {
+  parte = p; valores = {}; rodou = false;
+  document.querySelectorAll("#partes button").forEach(b => b.classList.toggle("ativa", b.dataset.id === p.id));
+  $("mundo").textContent = p.mundo;
+  const c = $("controles"); c.innerHTML = "";
+  p.controles.forEach(ctl => {
+    valores[ctl.id] = ctl.inicial;
+    const r = document.createElement("div"); r.className = "ctl"; r.textContent = ctl.rotulo; c.appendChild(r);
+    const g = document.createElement("div"); g.className = "opcoes"; g.id = "g_" + ctl.id;
+    ctl.valores.forEach(v => {
+      const b = document.createElement("button"); b.textContent = ctl.r(v); b.dataset.v = String(v);
+      b.classList.toggle("ativo", v === ctl.inicial);
+      b.addEventListener("click", () => {
+        valores[ctl.id] = v;
+        g.querySelectorAll("button").forEach(x => x.classList.toggle("ativo", x.dataset.v === String(v)));
+        atualizaPainel(); marcaDesatualizado();
+      });
+      g.appendChild(b);
+    });
+    c.appendChild(g);
+  });
+  $("res_a").textContent = "—"; $("res_b").textContent = "—"; $("verifica").innerHTML = ""; $("graficos").innerHTML = "";
+  $("aviso").textContent = ""; $("resultado").classList.remove("desatualizado");
+  $("detalhes_corpo").innerHTML = p.detalhes;
+  atualizaPainel();
+}
+function atualizaPainel() {
+  $("previsao").innerHTML = parte.previsao(valores);
+  const c = parte.cards(valores);
+  $("lbl_a").textContent = c.a[0]; $("nota_a").textContent = c.a[1];
+  $("lbl_b").textContent = c.b[0]; $("nota_b").textContent = c.b[1];
+  $("codigoview").textContent = parte.codigo(valores, seed);
+}
+function marcaDesatualizado() {
+  if (!rodou) return;
+  $("resultado").classList.add("desatualizado");
+  $("aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o resultado novo.";
+}
+PARTES.forEach((p, i) => {
+  const b = document.createElement("button"); b.dataset.id = p.id;
+  b.innerHTML = `<b>${i + 1}. ${p.nome}</b>${p.resumo}`;
+  b.addEventListener("click", () => montaParte(p));
+  $("partes").appendChild(b);
+});
+$("rodar").addEventListener("click", rodar);
+
+let webR, shelter;
+async function iniciar() {
+  const inicio = Date.now();
+  const relogio = setInterval(() => { $("rodar").textContent = `carregando o R… ${Math.round((Date.now() - inicio) / 1000)} s`; }, 1000);
+  try {
+    const { WebR } = await import("https://webr.r-wasm.org/latest/webr.mjs");
+    webR = new WebR(); await webR.init(); shelter = await new webR.Shelter();
+    clearInterval(relogio);
+    $("rodar").innerHTML = "&#9654; Rodar"; $("rodar").disabled = false;
+  } catch (e) {
+    clearInterval(relogio);
+    $("rodar").textContent = "o R não carregou";
+    $("aviso").textContent = "O R não carregou: " + e.message + ". Verifique a conexão e recarregue a página.";
+  }
+}
+async function rodar() {
+  seed = Math.floor(Math.random() * 100000);
+  atualizaPainel();
+  $("rodar").disabled = true; $("rodar").textContent = "sorteando…";
+  $("aviso").textContent = ""; $("resultado").classList.remove("desatualizado");
+  $("graficos").innerHTML = "";
+  try {
+    const captura = await shelter.captureR(parte.codigo(valores, seed), {
+      withAutoprint: false, captureStreams: true, captureConditions: true,
+      captureGraphics: { width: 800, height: 470, bg: "white", pointsize: 13 }
+    });
+    let r = null;
+    for (const l of captura.output) if (l.type === "stdout" && l.data.startsWith("RES")) r = l.data.trim().split(/\s+/).slice(1).map(parseFloat);
+    if (r) {
+      $("res_a").textContent = fmt(r[0]);
+      $("res_b").textContent = fmt(parte.id === "did" ? r[2] : r[1]);
+      $("verifica").innerHTML = parte.verifica(r, valores);
+    }
+    for (const img of captura.images) {
+      const cv = document.createElement("canvas");
+      cv.width = img.width; cv.height = img.height;
+      cv.getContext("2d").drawImage(img, 0, 0);
+      $("graficos").appendChild(cv);
+    }
+    rodou = true;
+    $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) {
+    $("aviso").textContent = "Erro na execução: " + e.message;
+  } finally {
+    if (shelter) await shelter.purge();
+    $("rodar").innerHTML = "&#9654; Rodar"; $("rodar").disabled = false;
+  }
+}
+
+montaParte(PARTES[0]);
+iniciar();
+</script>
+</body>
+</html>
