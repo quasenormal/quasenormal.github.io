@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Laboratório do MQO — a reta que minimiza os quadrados</title>
-<meta name="description" content="Ajuste a reta na mão, veja os quadrados dos resíduos e procure o mínimo — depois compare com o que o MQO encontra. R rodando no navegador, até no celular.">
+<title>Laboratório dos Mínimos Quadrados — R no navegador</title>
+<meta name="description" content="O método dos mínimos quadrados em linguagem simples: ponha a reta onde quiser, veja cada erro virar um quadrado na tela e procure a reta que deixa a soma das áreas menor. R rodando no navegador, inclusive no celular.">
 <style>
   :root { color-scheme: light; --azul:#1a4f8b; --cinza:#f4f5f7; --borda:#d8dce2; --verde:#157347; --verm:#b02a37; }
   * { box-sizing: border-box; }
@@ -12,13 +12,13 @@
          margin: 0; padding: 16px; max-width: 820px; margin-inline: auto;
          color: #1c2430; line-height: 1.5; }
   h1 { font-size: 1.3rem; color: var(--azul); margin-bottom: 4px; }
-  h2 { font-size: 1.02rem; color: var(--azul); margin: 18px 0 6px; }
+  h2 { font-size: 1.02rem; color: var(--azul); margin: 22px 0 6px; }
   .sub { color: #5a6573; font-size: .92rem; margin-top: 0; }
-  .box { background: var(--cinza); border: 1px solid var(--borda);
-         border-radius: 10px; padding: 12px; margin: 12px 0; font-size: .92rem; }
-  #status { font-weight: 600; }
-  #status.pronto { color: var(--verde); }
-  #status.erro { color: var(--verm); }
+  .chamada { border-left: 5px solid var(--azul); background: #eef3fa; padding: 12px 14px;
+             margin: 14px 0; font-size: 1.02rem; border-radius: 0 10px 10px 0; }
+  .chamada b { color: var(--azul); }
+  .chamada p { margin: 0; } .chamada p + p { margin-top: 8px; }
+  .nota { font-size: .92rem; color: #5a6573; margin: 8px 0; }
   .cenarios { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
               gap: 8px; margin: 8px 0 4px; }
   .cenarios button { border: 1px solid var(--borda); border-radius: 8px;
@@ -26,88 +26,94 @@
               text-align: left; line-height: 1.35; }
   .cenarios button b { color: var(--azul); }
   .cenarios button.ativo { outline: 3px solid var(--azul); background: #eef3fa; }
-  .controles { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 10px 0; }
+  .cenarios button .tag { display: none; color: var(--verde); font-weight: 700; }
+  .cenarios button.ativo .tag { display: inline; }
   .ctl { display: grid; grid-template-columns: 250px 1fr 74px; gap: 10px; align-items: center;
-         font-size: .92rem; }
+         font-size: .92rem; margin: 8px 0; }
   .ctl input[type=range] { width: 100%; height: 34px; }
-  .ctl .val { font-family: ui-monospace, Consolas, monospace; font-weight: 700;
-              text-align: right; }
+  .ctl .val { font-family: ui-monospace, Consolas, monospace; font-weight: 700; text-align: right; }
   .previsao { font-size: .95rem; background: #fffbe8; border: 1px solid #e8ddb0;
               border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
   .botoes { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; align-items: center; }
   .botoes button { border: 0; border-radius: 8px; padding: 12px 22px; font-size: 1rem;
            font-weight: 600; cursor: pointer; }
-  #rodar { background: var(--azul); color: #fff; }
+  #rodar { background: var(--azul); color: #fff; min-width: 140px; }
   #rodar:disabled { background: #9fb3cb; cursor: wait; }
-  #amostra, #revelar { background: #e8ebef; color: #1c2430; }
-  #revelar.on { background: var(--verde); color: #fff; }
+  .botoes button.sec { background: #fff; color: var(--azul); border: 1px solid var(--azul); padding: 10px 16px; }
+  .botoes button.sec.on { background: #eef3fa; }
+  .botoes button.sec:disabled { color: #8a93a0; border-color: var(--borda); cursor: default; }
+  #resultado.desatualizado { opacity: .45; }
+  #aviso { font-size: .9rem; color: var(--verm); font-weight: 600; margin: 6px 0; min-height: 1.2em; }
   .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
   .card { border: 2px solid var(--borda); border-radius: 10px; padding: 10px 12px; }
   .card h3 { margin: 0 0 4px; font-size: .9rem; }
   .card .big { font-size: 1.7rem; font-weight: 800; font-family: ui-monospace, Consolas, monospace; }
   .card.sua { border-color: var(--azul); } .card.sua h3 { color: var(--azul); }
   .card.otima { border-color: var(--verde); } .card.otima h3 { color: var(--verde); }
-  .card .nota { font-size: .8rem; color: #5a6573; }
+  .card .nota { font-size: .8rem; color: #5a6573; margin: 0; }
   #verifica { font-size: .92rem; margin-top: 8px; }
   #graficos canvas { width: 100%; height: auto; border: 1px solid var(--borda);
-                     border-radius: 10px; margin-top: 12px; background: #fff; }
+                     border-radius: 10px; margin-top: 12px; background: #fff; display: block; }
   details { margin-top: 12px; font-size: .88rem; }
   details pre { background: #10151c; color: #d7e3f0; border-radius: 10px; padding: 12px;
                 font-size: .8rem; overflow-x: auto; white-space: pre-wrap; }
+  .box { background: var(--cinza); border: 1px solid var(--borda);
+         border-radius: 10px; padding: 12px; margin: 12px 0; font-size: .92rem; }
   footer { color: #5a6573; font-size: .85rem; margin-top: 24px;
            border-top: 1px solid var(--borda); padding-top: 12px; }
-  @media (max-width: 640px) { .ctl { grid-template-columns: 1fr; gap: 2px; }
-                              .cards { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .ctl { grid-template-columns: 1fr; gap: 2px; } .cards { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
-<h1>Laboratório do MQO — a reta que minimiza os quadrados</h1>
-<p class="sub">Estatística e econometria — UERJ. Você põe a reta onde quiser; cada erro vira um quadrado desenhado na tela. O método dos mínimos quadrados é o nome de uma pergunta: onde a soma dessas áreas é a menor possível?</p>
+<h1>Laboratório dos Mínimos Quadrados</h1>
+<p class="sub">Estatística e econometria — UERJ. Esta página roda no navegador, inclusive no celular.</p>
 
-<div class="box">
-  <b>O que está na tela:</b> vinte observações e a reta <b>ŷ = a + b·x</b> que você controla.
-  Para cada ponto, o <b>resíduo</b> é a distância vertical até a sua reta. Cada resíduo é
-  desenhado como um <b>quadrado de lado igual a ele</b> — a área é o resíduo ao quadrado.
-  <br><br>
-  A <b>SQR</b> (soma dos quadrados dos resíduos) é a soma dessas áreas. O MQO é a reta que
-  torna essa soma a menor possível: <b>nenhuma outra reta tem SQR menor</b>. E o
-  <b>R²</b> compara a sua SQR com a da reta horizontal na média —
-  R² = 1 − SQR/SQT.
+<div class="chamada">
+  <p><b>A reta que melhor resume uma nuvem de pontos é a que deixa os erros, elevados ao quadrado,
+  com a menor soma possível.</b> Em linguagem simples: pegue uma reta qualquer; para cada ponto,
+  meça a distância vertical até ela, que é o erro; desenhe um quadrado com esse lado; some as
+  áreas. O método dos mínimos quadrados escolhe a reta que deixa essa soma menor do que qualquer
+  outra reta deixaria.</p>
+  <p>Nesta página você põe a reta onde quiser, vê os quadrados na tela e tenta achar a reta que
+  deixa a menor soma antes de o R, o programa que faz as contas, revelar qual é.</p>
 </div>
+
+<p class="nota">A simulação sorteia os pontos uma vez. A cada Rodar, ela desenha a sua reta sobre
+os mesmos pontos, com um quadrado para cada erro, e soma as áreas.</p>
 
 <h2>1. Escolha os dados</h2>
 <div class="cenarios" id="cenarios"></div>
 
 <h2>2. Ponha a sua reta</h2>
-<div class="controles">
-  <div class="ctl"><span>a — intercepto (onde a reta cruza o eixo y)</span>
-    <input type="range" id="a" min="-5" max="30" step="0.5" value="13">
-    <span class="val" id="av">13,0</span></div>
-  <div class="ctl"><span>b — inclinação (quanto y muda quando x sobe 1)</span>
-    <input type="range" id="b" min="-3" max="4" step="0.1" value="0">
-    <span class="val" id="bv">0,0</span></div>
-</div>
+<div class="ctl"><span>Onde a reta cruza o eixo vertical (x = 0)</span>
+  <input type="range" id="a" min="-5" max="30" step="0.5" value="13">
+  <span class="val" id="av">13,0</span></div>
+<div class="ctl"><span>Quanto y sobe quando x aumenta 1 (a inclinação)</span>
+  <input type="range" id="b" min="-3" max="4" step="0.1" value="0">
+  <span class="val" id="bv">0,0</span></div>
 
 <div class="previsao" id="previsao"></div>
 
-<p>Status do R: <span id="status">carregando o R no navegador… (10–30 segundos)</span></p>
 <div class="botoes">
-  <button id="rodar" disabled>&#9654; Rodar</button>
-  <button id="revelar">Revelar a reta do MQO</button>
-  <button id="amostra">Sortear outros dados</button>
+  <button id="rodar" disabled>carregando o R…</button>
+  <button id="revelar" class="sec" disabled>Revelar a reta dos mínimos quadrados</button>
+  <button id="outros" class="sec" disabled>Sortear outros pontos</button>
 </div>
+<div id="aviso"></div>
 
-<div class="cards">
-  <div class="card sua"><h3>SQR DA SUA RETA</h3>
-    <div class="big" id="res_sua">—</div>
-    <div class="nota" id="nota_sua">soma das áreas dos quadrados</div></div>
-  <div class="card otima"><h3>SQR MÍNIMA (MQO)</h3>
-    <div class="big" id="res_otima">—</div>
-    <div class="nota">nenhuma reta consegue menos que isso</div></div>
+<div id="resultado">
+  <div class="cards">
+    <div class="card sua"><h3>SOMA DAS ÁREAS DA SUA RETA</h3>
+      <div class="big" id="res_sua">—</div>
+      <p class="nota" id="nota_sua">A soma dos erros ao quadrado.</p></div>
+    <div class="card otima"><h3>A MENOR SOMA POSSÍVEL</h3>
+      <div class="big" id="res_otima">—</div>
+      <p class="nota">Nenhuma reta consegue menos que isso. É a soma da reta dos mínimos quadrados.</p></div>
+  </div>
+  <div id="verifica"></div>
+  <div id="graficos"></div>
 </div>
-<div id="verifica"></div>
-<div id="graficos"></div>
 
 <details><summary>Ver o código R que está rodando (muda com os controles)</summary>
 <pre id="codigoview"></pre></details>
@@ -115,7 +121,7 @@
 <section class="box">
   <h2 style="margin-top:0">Como citar esta página</h2>
   <p style="margin:.3rem 0">
-    FIRMO, Marcio Gold. <i>Laboratório do MQO — a reta que minimiza os quadrados</i>. 2026.
+    FIRMO, Marcio Gold. <i>Laboratório dos Mínimos Quadrados</i>. 2026.
     Disponível em: https://quasenormal.github.io/laboratorio-mqo-webr.html
   </p>
   <p style="margin:.3rem 0 0">
@@ -126,12 +132,11 @@
 </section>
 
 <footer>
-  Companheiras desta página: a <a href="revisao-estatistica-webr.html">Revisão Estatística
-  Interativa</a>, o <a href="laboratorio-tcl-webr.html">Laboratório do Teorema Central do
-  Limite</a>, o <a href="laboratorio-vies-webr.html">Laboratório do Viés</a> (o que acontece
-  quando falta uma variável na regressão) e o
-  <a href="laboratorio-tentativas-webr.html">Laboratório das Seis Ferramentas</a>.
-  Tecnologia: <a href="https://docs.r-wasm.org/webr/latest/">webR</a> (R em WebAssembly).
+  Esta página tem companheiras: o <a href="laboratorio-correlacao-webr.html">Laboratório da
+  Correlação</a> (o passo anterior da trilha do Quase Normal) e o
+  <a href="laboratorio-vies-webr.html">Laboratório do Viés de Variável Omitida</a> (o passo
+  seguinte). Tecnologia: <a href="https://docs.r-wasm.org/webr/latest/">webR</a>, uma versão do R
+  que roda dentro do navegador.
   <p style="margin:.7rem 0 0">
     <a href="./">Quase Normal</a> · projeto de extensão da UERJ · © Marcio Gold Firmo · Uso livre para ensino, sob
     <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.pt-br">CC BY-NC 4.0</a>
@@ -141,42 +146,32 @@
 </footer>
 
 <script type="module">
-// cada cenario: como y e gerado. x ~ uniforme(0,10) em todos.
+// cada cenario: como y e gerado; x vai de 0 a 10 em todos
 const CENARIOS = [
-  { nome: "Relação forte",
-    desc: "pouco ruído em volta de uma reta clara — o caso fácil",
+  { nome: "Relação forte", desc: "Os pontos ficam perto de uma reta clara.",
     n: 20, y: "3 + 2*x + rnorm(n, 0, 2)" },
-  { nome: "Relação fraca",
-    desc: "a mesma reta verdadeira, muito mais ruído: R² despenca, a inclinação não",
-    n: 20, y: "3 + 2*x + rnorm(n, 0, 9)" },
-  { nome: "Sem relação",
-    desc: "x não diz nada sobre y — a melhor reta é quase horizontal",
+  { nome: "Relação fraca", desc: "A reta por trás dos pontos é a mesma do cenário anterior, mas eles se espalham muito mais em volta dela.",
+    n: 20, y: "3 + 2*x + rnorm(n, 0, 9)",
+    nota: "A reta dos mínimos quadrados sai parecida com a da relação forte; o que muda é o R², que cai muito. Os pontos se espalham, mas a tendência é a mesma." },
+  { nome: "Sem relação", desc: "O x não diz nada sobre o y; a melhor reta é quase horizontal.",
     n: 20, y: "13 + rnorm(n, 0, 5)" },
-  { nome: "Curva, não reta",
-    desc: "a relação existe e é forte, mas não é linear",
+  { nome: "Curva, não reta", desc: "A relação existe e é forte, mas tem a forma de um arco.",
     n: 20, y: "25 - 0.8*(x - 5)^2 + rnorm(n, 0, 2)",
-    nota: "Olhe o gráfico: existe uma relação clara entre x e y — e ainda assim o R² do " +
-          "MQO é baixíssimo. O R² mede o quanto uma <b>reta</b> se ajusta aos dados, não se " +
-          "existe relação. Aqui nenhuma reta serve, porque a relação é uma parábola." },
-  { nome: "Com um ponto extremo",
-    desc: "dezenove pontos comportados e um fora da curva",
+    nota: "Olhe o gráfico: existe uma relação clara entre x e y, e mesmo assim o R² da reta dos mínimos quadrados é baixíssimo. O R² mede o quanto uma reta se ajusta aos pontos; ele não mede se existe relação. Aqui nenhuma reta serve, porque a relação é um arco." },
+  { nome: "Com um ponto extremo", desc: "Dezenove pontos ficam comportados e um fica bem longe dos outros.",
     n: 20, y: "3 + 2*x + rnorm(n, 0, 2)", outlier: true,
-    nota: "O ponto extremo tem um resíduo enorme — e como o critério soma o <b>quadrado</b> " +
-          "dos resíduos, esse único ponto pesa mais que vários outros juntos. É por isso que " +
-          "o MQO é sensível a outliers: o quadrado pune desvios grandes desproporcionalmente." },
-  { nome: "Poucos pontos",
-    desc: "só seis observações: a reta fica à mercê de cada uma",
-    n: 6,  y: "3 + 2*x + rnorm(n, 0, 2)",
-    nota: "Aperte <b>Sortear outros dados</b> algumas vezes e veja a reta do MQO pular de " +
-          "uma rodada para outra. Com n pequeno, a estimativa é instável — é a mesma " +
-          "variabilidade amostral do Teorema Central do Limite, agora nos coeficientes." },
+    nota: "O ponto extremo tem um erro enorme, e como a conta soma os erros ao quadrado, esse único ponto pesa mais que vários outros juntos. É por isso que a reta dos mínimos quadrados é puxada por pontos extremos." },
+  { nome: "Poucos pontos", desc: "São só seis pontos, e a reta fica à mercê de cada um deles.",
+    n: 6, y: "3 + 2*x + rnorm(n, 0, 2)",
+    nota: "Aperte \"Sortear outros pontos\" algumas vezes e veja a reta dos mínimos quadrados pular de uma rodada para outra. Com poucos pontos, a reta encontrada muda muito de amostra para amostra." },
 ];
 
 const $ = id => document.getElementById(id);
-const fmt = (x, d = 1) => (Math.round(x * 10 ** d) / 10 ** d).toFixed(d).replace(".", ",");
-let seed = 123;
+const fmt = (x, d = 1) => (x === null || Number.isNaN(x)) ? "—" : x.toFixed(d).replace(".", ",");
+let seed = Math.floor(Math.random() * 100000);
 let cen = CENARIOS[0];
 let mostrarMQO = false;
+let rodou = false;
 
 function codigoR() {
   const a = parseFloat($("a").value), b = parseFloat($("b").value);
@@ -186,137 +181,122 @@ x <- runif(n, 0, 10)
 y <- ${cen.y}${cen.outlier ? `
 x[n] <- 9; y[n] <- 1     # o ponto extremo` : ``}
 
-a <- ${a}; b <- ${b}          # a SUA reta
-res <- y - (a + b*x)          # residuos: distancia vertical ate ela
-sqr_sua <- sum(res^2)         # soma dos quadrados dos residuos
+a <- ${a}; b <- ${b}          # a SUA reta: y = a + b * x
+erro <- y - (a + b*x)         # o erro de cada ponto: a distancia vertical ate a reta
+soma_sua <- sum(erro^2)       # a soma das areas dos quadrados
 
-m <- lm(y ~ x)                # o MQO faz isso sozinho
-sqr_mqo <- sum(residuals(m)^2)
-sqt <- sum((y - mean(y))^2)   # a reta horizontal na media
+m <- lm(y ~ x)                # a reta dos minimos quadrados, que o R encontra sozinho
+soma_mqo <- sum(residuals(m)^2)
+soma_media <- sum((y - mean(y))^2)   # a soma da reta horizontal na media de y
+cat("RES", soma_sua, soma_mqo, 1 - soma_sua/soma_media, summary(m)$r.squared, coef(m)[1], coef(m)[2], "\\n")
 
-cat("RES", sqr_sua, sqr_mqo, 1 - sqr_sua/sqt, summary(m)$r.squared,
-    coef(m)[1], coef(m)[2], "\\n")
-
-plot(x, y, pch = 19, col = "grey25", cex = 1.1,
-     xlim = c(-0.5, 10.5), ylim = range(c(y, a + b*c(0, 10))) + c(-2, 2),
-     main = "Cada residuo e o lado de um quadrado",
-     xlab = "x", ylab = "y")
-
-# desenha um quadrado por residuo (lado = |residuo|, em unidades de y)
+par(mar = c(4.2, 4.2, 4.4, 1))
+plot(x, y, pch = 19, col = "grey25", cex = 1.1, xlim = c(-0.5, 10.5),
+     ylim = range(c(y, a + b*c(0, 10))) + c(-2, 2), main = "", xlab = "x", ylab = "y")
+# um quadrado por erro: lado = |erro|, em unidades de y
 usr <- par("usr"); pin <- par("pin")
 xpp <- (usr[2] - usr[1]) / pin[1]   # unidades de x por polegada
 ypp <- (usr[4] - usr[3]) / pin[2]   # unidades de y por polegada
 for (i in seq_len(n)) {
-  yi <- y[i]; pi_ <- a + b*x[i]; r <- res[i]
-  lado_x <- abs(r) / ypp * xpp      # largura que "parece" quadrada na tela
-  rect(x[i], min(yi, pi_), x[i] + lado_x, max(yi, pi_),
+  yi <- y[i]; na_reta <- a + b*x[i]; e <- erro[i]
+  lado_x <- abs(e) / ypp * xpp      # a largura que parece quadrada na tela
+  rect(x[i], min(yi, na_reta), x[i] + lado_x, max(yi, na_reta),
        col = rgb(0.69, 0.16, 0.22, 0.18), border = rgb(0.69, 0.16, 0.22, 0.45))
-  segments(x[i], yi, x[i], pi_, col = rgb(0.69, 0.16, 0.22, 0.9), lwd = 1.5)
+  segments(x[i], yi, x[i], na_reta, col = rgb(0.69, 0.16, 0.22, 0.9), lwd = 1.5)
 }
-
 abline(a = a, b = b, col = "#1a4f8b", lwd = 3)${mostrarMQO ? `
 abline(m, col = "forestgreen", lwd = 3, lty = 2)
-legend("topleft", bty = "n", lwd = 3, lty = c(1, 2),
-       col = c("#1a4f8b", "forestgreen"),
-       legend = c("a sua reta", "o MQO"))` : `
-legend("topleft", bty = "n", lwd = 3, col = "#1a4f8b", legend = "a sua reta")`}`;
+legend("topleft", bty = "n", lwd = 3, lty = c(1, 2), col = c("#1a4f8b", "forestgreen"),
+       legend = c("a sua reta", "a reta dos mínimos quadrados"))` : `
+legend("topleft", bty = "n", lwd = 3, col = "#1a4f8b", legend = "a sua reta")`}
+title(main = paste0("Cada erro é o lado de um quadrado; a soma das áreas é ", formatC(soma_sua, format = "f", digits = 1, decimal.mark = ",")), line = 2.4)
+mtext("O erro de um ponto é a distância vertical dele até a reta", side = 3, line = 0.6, cex = 0.9, col = "grey30")`;
 }
 
 function atualizaPainel() {
   const a = parseFloat($("a").value), b = parseFloat($("b").value);
   $("av").textContent = fmt(a); $("bv").textContent = fmt(b);
-  $("previsao").innerHTML =
-    `<b>A sua reta:</b> ŷ = ${fmt(a)} ${b < 0 ? "−" : "+"} ${fmt(Math.abs(b))}·x. ` +
-    `Mexa em a e b para encolher os quadrados; quando a soma das áreas parar de cair, ` +
-    `você chegou onde o MQO chega.`;
+  $("previsao").innerHTML = `<b>A sua reta:</b> y = ${fmt(a)} ${b < 0 ? "−" : "+"} ${fmt(Math.abs(b))} × x. Mexa nos ` +
+    `dois controles para encolher os quadrados. Quando a soma das áreas parar de cair, você chegou aonde o método chega.`;
   $("codigoview").textContent = codigoR();
-  $("res_sua").textContent = "—"; $("res_otima").textContent = "—";
-  $("verifica").textContent = "";
 }
-
-const elC = $("cenarios");
+function marcaDesatualizado() {
+  if (!rodou) return;
+  $("resultado").classList.add("desatualizado");
+  $("aviso").textContent = "Você mudou a reta. Aperte Rodar para ver a soma nova.";
+}
 CENARIOS.forEach((c, i) => {
   const bt = document.createElement("button");
-  bt.innerHTML = `<b>${i + 1}. ${c.nome}</b><br>${c.desc}`;
+  bt.innerHTML = `<b>${i + 1}. ${c.nome}</b> <span class="tag">(escolhido)</span><br>${c.desc}`;
   bt.addEventListener("click", () => {
     cen = c;
     document.querySelectorAll(".cenarios button").forEach(x => x.classList.remove("ativo"));
     bt.classList.add("ativo");
-    atualizaPainel();
-    if (!$("rodar").disabled) { $("status").textContent = "dados escolhidos — aperte Rodar."; $("status").className = ""; }
+    atualizaPainel(); marcaDesatualizado();
   });
-  elC.appendChild(bt);
+  $("cenarios").appendChild(bt);
   if (i === 0) bt.classList.add("ativo");
 });
-
-["a", "b"].forEach(id => $(id).addEventListener("input", atualizaPainel));
-$("amostra").addEventListener("click", () => {
-  seed = Math.floor(Math.random() * 100000);
-  atualizaPainel();
-  if (!$("rodar").disabled) { $("status").textContent = "novos dados — aperte Rodar."; $("status").className = ""; }
-});
+["a", "b"].forEach(id => $(id).addEventListener("input", () => { atualizaPainel(); marcaDesatualizado(); }));
+$("outros").addEventListener("click", () => { seed = Math.floor(Math.random() * 100000); atualizaPainel(); rodar(); });
 $("revelar").addEventListener("click", () => {
   mostrarMQO = !mostrarMQO;
   $("revelar").classList.toggle("on", mostrarMQO);
-  $("revelar").textContent = mostrarMQO ? "Esconder a reta do MQO" : "Revelar a reta do MQO";
-  atualizaPainel();
+  $("revelar").textContent = mostrarMQO ? "Esconder a reta dos mínimos quadrados" : "Revelar a reta dos mínimos quadrados";
+  atualizaPainel(); rodar();
 });
+$("rodar").addEventListener("click", rodar);
 
 let webR, shelter;
 async function iniciar() {
+  const inicio = Date.now();
+  const relogio = setInterval(() => { $("rodar").textContent = `carregando o R… ${Math.round((Date.now() - inicio) / 1000)} s`; }, 1000);
   try {
     const { WebR } = await import("https://webr.r-wasm.org/latest/webr.mjs");
-    webR = new WebR();
-    await webR.init();
-    shelter = await new webR.Shelter();
-    $("status").textContent = "pronto! Ponha a reta e aperte Rodar.";
-    $("status").className = "pronto";
-    $("rodar").disabled = false;
+    webR = new WebR(); await webR.init(); shelter = await new webR.Shelter();
+    clearInterval(relogio);
+    $("rodar").innerHTML = "&#9654; Rodar"; $("rodar").disabled = false;
+    $("revelar").disabled = false; $("outros").disabled = false;
   } catch (e) {
-    $("status").textContent = "falha ao carregar o R: " + e.message + " — verifique a conexão e recarregue.";
-    $("status").className = "erro";
+    clearInterval(relogio);
+    $("rodar").textContent = "o R não carregou";
+    $("aviso").textContent = "O R não carregou: " + e.message + ". Verifique a conexão e recarregue a página.";
   }
 }
 
 async function rodar() {
-  $("rodar").disabled = true;
-  $("status").textContent = "executando…"; $("status").className = "";
+  if (!shelter) return;
+  atualizaPainel();
+  $("rodar").disabled = true; $("rodar").textContent = "desenhando…";
+  $("aviso").textContent = ""; $("resultado").classList.remove("desatualizado");
   $("graficos").innerHTML = "";
   try {
     const captura = await shelter.captureR(codigoR(), {
       withAutoprint: false, captureStreams: true, captureConditions: true,
-      captureGraphics: { width: 700, height: 520, bg: "white", pointsize: 14 }
+      captureGraphics: { width: 700, height: 520, bg: "white", pointsize: 13 }
     });
     let r = null;
     for (const linha of captura.output) {
       if (linha.type === "stdout" && linha.data.startsWith("RES")) {
         const p = linha.data.trim().split(/\s+/);
-        r = { sqrSua: +p[1], sqrMqo: +p[2], r2Sua: +p[3], r2Mqo: +p[4],
-              aMqo: +p[5], bMqo: +p[6] };
+        r = { somaSua: +p[1], somaMqo: +p[2], r2Sua: +p[3], r2Mqo: +p[4], aMqo: +p[5], bMqo: +p[6] };
       }
     }
     if (r) {
-      $("res_sua").textContent = fmt(r.sqrSua);
-      $("res_otima").textContent = fmt(r.sqrMqo);
-      const excesso = r.sqrSua / r.sqrMqo;
+      $("res_sua").textContent = fmt(r.somaSua);
+      $("res_otima").textContent = fmt(r.somaMqo);
+      const excesso = r.somaSua / r.somaMqo;
       const perto = excesso < 1.02;
-      $("nota_sua").textContent = perto
-        ? "praticamente no mínimo"
-        : `${fmt(excesso, 2)}× a menor soma possível`;
-      let txt = `<b>A sua reta</b> deixa uma soma de áreas de <b>${fmt(r.sqrSua)}</b>, ` +
-        `contra <b>${fmt(r.sqrMqo)}</b> da reta do MQO — que é ŷ = ${fmt(r.aMqo, 2)} ` +
-        `${r.bMqo < 0 ? "−" : "+"} ${fmt(Math.abs(r.bMqo), 2)}·x. `;
-      txt += perto
-        ? `Você chegou ao mínimo: qualquer mexida daqui só aumenta a soma. `
-        : `Ainda dá para encolher: mexa em a e b e veja a soma cair. `;
-      txt += `<br><br><b>R² da sua reta: ${fmt(r.r2Sua, 3)}</b> (o do MQO é ` +
-        `${fmt(r.r2Mqo, 3)}, o maior possível nestes dados). O R² compara a sua soma com a ` +
-        `da reta horizontal na média de y: `;
-      txt += r.r2Sua < 0
-        ? `o seu deu <b>negativo</b>, o que significa que a sua reta erra mais do que ` +
-          `simplesmente chutar a média de y para todo mundo.`
-        : `zero seria empatar com essa reta horizontal, e 1 seria passar exatamente por ` +
-          `todos os pontos.`;
+      $("nota_sua").textContent = perto ? "Praticamente no mínimo." : `${fmt(excesso, 2)} vezes a menor soma possível.`;
+      let txt = `<b>A sua reta</b> deixa uma soma de áreas de <b>${fmt(r.somaSua)}</b>; a reta dos mínimos quadrados deixa ` +
+        `<b>${fmt(r.somaMqo)}</b>, e é y = ${fmt(r.aMqo, 2)} ${r.bMqo < 0 ? "−" : "+"} ${fmt(Math.abs(r.bMqo), 2)} × x. ` +
+        (perto ? `Você chegou ao mínimo: qualquer mexida daqui só aumenta a soma. `
+               : `Ainda dá para encolher os quadrados: mexa nos controles e veja a soma cair. `);
+      txt += `<br><br><b>R² da sua reta: ${fmt(r.r2Sua, 2)}</b>; o da reta dos mínimos quadrados é ${fmt(r.r2Mqo, 2)}, o maior ` +
+        `possível nestes pontos. O R² compara a soma da sua reta com a soma de uma reta horizontal na média de y: ` +
+        (r.r2Sua < 0
+          ? `o seu deu negativo, o que quer dizer que a sua reta erra mais do que simplesmente chutar a média de y para todo mundo.`
+          : `zero seria empatar com essa reta horizontal, e 1 seria passar exatamente por todos os pontos.`);
       if (cen.nota) txt += `<br><br>${cen.nota}`;
       $("verifica").innerHTML = txt;
     }
@@ -326,18 +306,15 @@ async function rodar() {
       cv.getContext("2d").drawImage(img, 0, 0);
       $("graficos").appendChild(cv);
     }
-    $("status").textContent = "pronto! Mexa na reta e rode de novo.";
-    $("status").className = "pronto";
+    rodou = true;
   } catch (e) {
-    $("status").textContent = "erro na execução: " + e.message;
-    $("status").className = "erro";
+    $("aviso").textContent = "Erro na execução: " + e.message;
   } finally {
     if (shelter) await shelter.purge();
-    $("rodar").disabled = false;
+    $("rodar").innerHTML = "&#9654; Rodar"; $("rodar").disabled = false;
   }
 }
 
-$("rodar").addEventListener("click", rodar);
 atualizaPainel();
 iniciar();
 </script>
