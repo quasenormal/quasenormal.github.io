@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratório da Probabilidade — R no navegador</title>
+<meta name="description" content="Probabilidade em linguagem simples: jogue um dado milhares de vezes e veja a fração de vezes assentar na chance teórica; confira as regras do «ou» e do «e» jogando dois dados; veja o que muda quando um sorteio influencia o outro. R rodando no navegador, inclusive no celular.">
+<style>
+  :root { color-scheme: light; --azul:#1a4f8b; --cinza:#f4f5f7; --borda:#d8dce2; --verde:#157347; --verm:#b02a37; }
+  * { box-sizing: border-box; }
+  body { background: #fff; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+         margin: 0; padding: 16px; max-width: 820px; margin-inline: auto;
+         color: #1c2430; line-height: 1.5; }
+  h1 { font-size: 1.3rem; color: var(--azul); margin-bottom: 4px; }
+  h2 { font-size: 1.02rem; color: var(--azul); margin: 26px 0 6px; }
+  .sub { color: #5a6573; font-size: .92rem; margin-top: 0; }
+  .chamada { border-left: 5px solid var(--azul); background: #eef3fa; padding: 12px 14px;
+             margin: 14px 0; font-size: 1.02rem; border-radius: 0 10px 10px 0; }
+  .chamada b { color: var(--azul); }
+  .chamada p { margin: 0; } .chamada p + p { margin-top: 8px; }
+  .nota { font-size: .92rem; color: #5a6573; margin: 8px 0; }
+  .ctl { font-size: .92rem; margin: 10px 0 4px; }
+  .opcoes { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+  .opcoes button { border: 1px solid var(--borda); background: #fff; border-radius: 8px;
+                   padding: 9px 14px; font-size: 1rem; font-weight: 700; cursor: pointer;
+                   font-family: ui-monospace, Consolas, monospace; min-width: 64px; }
+  .opcoes button.ativo { background: var(--azul); color: #fff; border-color: var(--azul); }
+  .opcoes.texto button { font-family: inherit; font-weight: 600; font-size: .95rem; }
+  .veloc { font-size: .92rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+  .veloc input { width: 170px; }
+  .veloc span { color: #5a6573; }
+  .previsao { font-size: .95rem; background: #fffbe8; border: 1px solid #e8ddb0;
+              border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+  .botoes { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; align-items: center; }
+  .botoes button { border: 0; border-radius: 8px; padding: 12px 22px; font-size: 1rem;
+           font-weight: 600; cursor: pointer; }
+  .botoes button.rodar { background: var(--azul); color: #fff; min-width: 140px; }
+  .botoes button.rodar:disabled { background: #9fb3cb; cursor: wait; }
+  .botoes button.sec { background: #fff; color: var(--azul); border: 1px solid var(--azul); padding: 10px 16px; }
+  .botoes button.sec:disabled { color: #8a93a0; border-color: var(--borda); cursor: default; }
+  .aviso { font-size: .9rem; color: var(--verm); font-weight: 600; margin: 6px 0; min-height: 1.2em; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .card { border: 2px solid var(--borda); border-radius: 10px; padding: 10px 12px; }
+  .card h3 { margin: 0 0 4px; font-size: .9rem; }
+  .card .big { font-size: 1.7rem; font-weight: 800; font-family: ui-monospace, Consolas, monospace; }
+  .card .nota { font-size: .8rem; color: #5a6573; margin: 0; }
+  .card .faces { font-family: ui-monospace, Consolas, monospace; font-size: .95rem; line-height: 1.7; }
+  .verifica { font-size: .92rem; margin-top: 8px; }
+  canvas.anim { width: 100%; height: auto; border: 1px solid var(--borda); border-radius: 10px;
+          margin-top: 12px; background: #fff; display: block; }
+  .lista { margin-top: 6px; font-size: .88rem; }
+  .lista summary { cursor: pointer; color: var(--azul); text-align: right; }
+  .lista pre { max-height: 200px; overflow: auto; background: var(--cinza); color: #1c2430; border: 1px solid var(--borda);
+               border-radius: 8px; padding: 8px 10px; font-size: .82rem; white-space: pre-wrap; margin-top: 6px; }
+  details { margin-top: 12px; font-size: .88rem; }
+  details pre { background: #10151c; color: #d7e3f0; border-radius: 10px; padding: 12px;
+                font-size: .8rem; overflow-x: auto; white-space: pre-wrap; }
+  .box { background: var(--cinza); border: 1px solid var(--borda);
+         border-radius: 10px; padding: 12px; margin: 12px 0; font-size: .92rem; }
+  footer { color: #5a6573; font-size: .85rem; margin-top: 24px;
+           border-top: 1px solid var(--borda); padding-top: 12px; }
+  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>Laboratório da Probabilidade</h1>
+<p class="sub">Estatística. Esta página roda no navegador, inclusive no celular.</p>
+
+<div class="chamada">
+  <p><b>O que quer dizer «a chance de sair 6 é 1 em 6»?</b> Jogue um dado seis vezes e o 6 não sai
+  necessariamente uma vez: pode não sair nenhuma vez, pode sair três vezes. Jogue 6 mil vezes e o 6
+  sai quase exatamente mil vezes. Probabilidade é isso: a fração de vezes que algo acontece quando a
+  jogada se repete muitas e muitas vezes.</p>
+  <p>Nesta página você joga o dado quantas vezes quiser e vê a fração de vezes em que o resultado saiu
+  pular no começo e assentar na chance teórica. Depois confere, jogando dois dados, as duas regras para combinar
+  chances. Por fim, vê o que muda quando um sorteio influencia o outro.</p>
+</div>
+
+<p class="nota">O R (o programa de estatística que faz os sorteios) joga o dado <b>n</b> vezes de uma
+vez. A página mostra as jogadas uma a uma, na velocidade que você escolher, e vai calculando a fração
+de vezes que o resultado apareceu.</p>
+
+<h2>1. Escolha quantas vezes jogar</h2>
+<div class="ctl"><b>n</b> é o número de jogadas (ou de pares de cartas, na parte 4). O mesmo n vale para as partes 2, 3 e 4.</div>
+<div class="opcoes" id="ns"></div>
+<div class="veloc"><label for="vel">Velocidade do sorteio:</label>
+  <input type="range" id="vel" min="-2" max="2" step="1" value="0"> <span id="vel_txt"></span></div>
+
+<h2>2. Jogue um dado e veja a fração de vezes assentar na chance teórica</h2>
+<div class="ctl">Escolha qual resultado a página deve contar:</div>
+<div class="opcoes texto" id="alvo"></div>
+<div id="parte_dado"></div>
+
+<h2>3. Dois dados: «ou» soma, «e» multiplica</h2>
+<p class="nota">Agora cada jogada é de dois dados. A página conta duas coisas. A primeira é quantas vezes sai 5 <b>ou</b> 6 no
+primeiro dado. Como os dois resultados não podem sair ao mesmo tempo, a chance de um ou outro é a soma:
+1/6 + 1/6 = 2/6. A segunda é quantas vezes sai 6 no primeiro dado <b>e</b> 6 no segundo. Como o segundo dado não sabe o que
+saiu no primeiro (os dois sorteios são independentes), a chance de os dois acontecerem é o produto:
+1/6 × 1/6 = 1/36.</p>
+<div id="parte_dois"></div>
+
+<h2>4. Quando um sorteio influencia o outro</h2>
+<p class="nota">Imagine um monte com 10 cartas, 5 vermelhas e 5 pretas. Você tira uma carta, depois outra. Se você
+devolve a primeira ao monte antes de tirar a segunda, a segunda não sabe nada da primeira: a chance de ela
+ser vermelha é 5 em 10, saia o que sair na primeira. Se você não devolve, a primeira carta muda o monte:
+se ela foi vermelha, sobram 4 vermelhas em 9 cartas; se foi preta, sobram 5 vermelhas em 9 cartas. A página
+tira as duas cartas n vezes e conta quantas vezes a segunda carta é vermelha, separando os casos em que a
+primeira foi vermelha dos casos em que foi preta.</p>
+<div class="ctl">Devolver a primeira carta ao monte antes de tirar a segunda?</div>
+<div class="opcoes texto" id="devolve"></div>
+<div id="parte_cartas"></div>
+
+<section class="box">
+  <h2 style="margin-top:0">Como citar esta página</h2>
+  <p style="margin:.3rem 0">
+    FIRMO, Marcio Gold. <i>Laboratório da Probabilidade</i>. 2026.
+    Disponível em: https://quasenormal.github.io/laboratorio-probabilidade-basica-webr.html
+  </p>
+  <p style="margin:.3rem 0 0">
+    Uso livre para ensino, com citação da autoria; uso comercial não autorizado
+    (<a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">licença</a>).
+    Se adaptar o material, indique o que foi alterado.
+  </p>
+</section>
+
+<footer>
+  Esta página é o primeiro passo da trilha do <a href="./">Quase Normal</a>. O passo seguinte é o
+  <a href="laboratorio-probabilidade-webr.html">Laboratório da Probabilidade Condicional</a>, que começa
+  onde a parte 4 termina. Tecnologia: <a href="https://docs.r-wasm.org/webr/latest/">webR</a>, uma
+  versão do R que roda dentro do navegador.
+  <p style="margin:.7rem 0 0">
+    <a href="./">Quase Normal</a> · projeto de extensão da UERJ · © Marcio Gold Firmo · Uso livre para ensino, sob
+    <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.pt-br">CC BY-NC 4.0</a>
+    — cite a autoria; uso comercial não autorizado.
+    <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
+  </p>
+</footer>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const fmt = (x, d = 2) => (x === null || x === undefined || Number.isNaN(x)) ? "—" : x.toFixed(d).replace(".", ",");
+const fmtInt = k => Math.round(k).toLocaleString("pt-BR");
+const pct = x => Number.isFinite(x) ? fmt(x * 100, 1) + "%" : "—";
+const NS = [10, 100, 1000, 10000];
+const DURACAO = { 10: 3000, 100: 5000, 1000: 7000, 10000: 10000 };   // ms do sorteio inteiro, na velocidade normal
+let n = 1000, fator = 1;
+const VERMELHO = "#d62828", AZUL = "#1a4f8b", LARANJA = "#e07b00", CINZA = "#e3e7ec";
+
+// faixa em que a fracao deve cair em 95 de cada 100 vezes, com n jogadas
+function faixa(p) { const e = 1.96 * Math.sqrt(p * (1 - p) / n); return `entre ${pct(Math.max(0, p - e))} e ${pct(Math.min(1, p + e))}`; }
+
+// ---------- as três partes ----------
+let alvo = "6";          // parte 2: "6" ou "par"
+let devolve = false;     // parte 4
+const ALVOS = { "6": { rotulo: "sair 6", p: 1 / 6, teste: o => o === 6, frase: "saiu 6", teoria: "1 em 6, ou 16,7%" },
+                "par": { rotulo: "sair um número par", p: 1 / 2, teste: o => o % 2 === 0, frase: "saiu um número par", teoria: "3 em 6, ou 50%" } };
+
+const PARTES = [
+  { id: "dado", unidade: "jogada", unidades: "jogadas", artigo: "as", zero: "Ainda nenhuma jogada", zeroLista: "Nenhuma jogada foi feita ainda. Aperte Rodar para começar.", vazio: "as últimas jogadas aparecem aqui",
+    codigoR: () => `set.seed(${seed()})
+n <- ${n}
+dado <- sample(1:6, n, replace = TRUE)   # n jogadas de um dado honesto
+cat("X", dado, "\\n")`,
+    parse: t => parseInt(t),
+    formata: o => String(o),
+    strip: o => [{ texto: String(o), fundo: ALVOS[alvo].teste(o) ? VERMELHO : CINZA, cor: ALVOS[alvo].teste(o) ? "#fff" : "#1c2430" }],
+    porLinha: 30,
+    eventos: () => [{ titulo: `FRAÇÃO DE VEZES QUE ${ALVOS[alvo].frase.toUpperCase()}`, curto: ALVOS[alvo].frase, cor: VERMELHO, p: ALVOS[alvo].p, teste: ALVOS[alvo].teste, cond: () => true }],
+    extra: { titulo: "QUANTAS VEZES SAIU CADA FACE", conta: (st, o) => { st.faces[o - 1]++; }, texto: st => st.faces.map((c, i) => `${i + 1}: ${fmtInt(c)}`).join(" · "), zera: st => { st.faces = [0, 0, 0, 0, 0, 0]; } },
+    previsao: () => `<b>O que a teoria prevê:</b> a chance de ${ALVOS[alvo].rotulo} é ${ALVOS[alvo].teoria}. Nas primeiras jogadas, a fração ` +
+      `de vezes em que ${ALVOS[alvo].frase} muda muito de uma jogada para a outra, porque cada jogada pesa muito no total. Com ${fmtInt(n)} jogadas, a fração deve ficar ${faixa(ALVOS[alvo].p)}, em 95 de cada 100 vezes que ` +
+      `você rodar.`,
+    verifica: st => { const ev = st.cont[0]; return `<b>Previsto e observado:</b> a teoria prevê ${pct(ALVOS[alvo].p)}. Em ${fmtInt(n)} jogadas, ` +
+      `${ALVOS[alvo].frase} em ${fmtInt(ev.num)} delas, ou seja, <b>${pct(ev.num / ev.den)}</b>. <b>No gráfico:</b> a faixa de cima mostra as últimas jogadas; ` +
+      `a linha de baixo mostra a fração de vezes em que ${ALVOS[alvo].frase} até cada jogada. Ela pula no começo e assenta perto da linha tracejada, que é a chance ` +
+      `teórica. Aperte Rodar de novo: as jogadas mudam, mas o lugar onde a fração assenta não muda.` +
+      (n <= 10 ? ` Com 10 jogadas a fração ainda não assentou. Escolha 1.000 jogadas e rode de novo.` : ``); },
+    leitura: () => `Em cima, as últimas jogadas (vermelho quando ${ALVOS[alvo].frase}). Embaixo, a fração de vezes em que ${ALVOS[alvo].frase} até cada jogada; a linha tracejada é a chance teórica.`,
+    eixoX: "jogada" },
+  { id: "dois", unidade: "jogada", unidades: "jogadas", artigo: "as", zero: "Ainda nenhuma jogada", zeroLista: "Nenhuma jogada foi feita ainda. Aperte Rodar para começar.", vazio: "as últimas jogadas aparecem aqui",
+    codigoR: () => `set.seed(${seed()})
+n <- ${n}
+dado1 <- sample(1:6, n, replace = TRUE)   # o primeiro dado, n vezes
+dado2 <- sample(1:6, n, replace = TRUE)   # o segundo dado, n vezes
+cat("X", paste0(dado1, "-", dado2), "\\n")`,
+    parse: t => t.split("-").map(Number),
+    formata: o => `${o[0]}-${o[1]}`,
+    strip: o => { const dois = o[0] === 6 && o[1] === 6, ou = o[0] >= 5;
+      return [{ texto: String(o[0]), fundo: dois ? VERMELHO : ou ? LARANJA : CINZA, cor: dois || ou ? "#fff" : "#1c2430" },
+              { texto: String(o[1]), fundo: dois ? VERMELHO : CINZA, cor: dois ? "#fff" : "#1c2430" }]; },
+    porLinha: 15,
+    eventos: () => [{ titulo: "SAIU 5 OU 6 NO PRIMEIRO DADO", curto: "5 ou 6 no primeiro", cor: LARANJA, p: 1 / 3, teste: o => o[0] >= 5, cond: () => true },
+                    { titulo: "SAIU 6 NOS DOIS DADOS", curto: "6 nos dois", cor: VERMELHO, p: 1 / 36, teste: o => o[0] === 6 && o[1] === 6, cond: () => true }],
+    previsao: () => `<b>O que a teoria prevê:</b> a chance de sair 5 ou 6 no primeiro dado é 1/6 + 1/6 = 1/3, ou 33,3%; com ${fmtInt(n)} jogadas, a fração deve ficar ` +
+      `${faixa(1 / 3)}. A chance de sair 6 nos dois dados é 1/6 × 1/6 = 1/36, ou 2,8%; a fração deve ficar ${faixa(1 / 36)}.` +
+      (n <= 100 ? ` Um acontecimento de chance 1 em 36 quase não aparece em ${n} jogadas; para conferir a regra do «e», escolha 1.000 ou 10.000 jogadas.` : ``),
+    verifica: st => { const a = st.cont[0], b = st.cont[1]; return `<b>Previsto e observado:</b> para 5 ou 6 no primeiro dado, a regra da soma prevê 33,3%, e saiu ` +
+      `<b>${pct(a.num / a.den)}</b> (${fmtInt(a.num)} de ${fmtInt(n)} jogadas). Para 6 nos dois dados, a regra do produto prevê 2,8%, e saiu <b>${pct(b.num / b.den)}</b> ` +
+      `(${fmtInt(b.num)} de ${fmtInt(n)} jogadas). A regra do «e» funciona porque o segundo dado não sabe o que saiu no primeiro. <b>No gráfico:</b> a faixa de cima ` +
+      `mostra as últimas jogadas dos dois dados (laranja quando saiu 5 ou 6 no primeiro; vermelho quando saiu 6 nos dois); a parte de baixo mostra a fração de vezes ` +
+      `em que cada acontecimento ocorreu até cada jogada.`; },
+    leitura: () => `Em cima, as últimas jogadas dos dois dados. Embaixo, a fração de vezes em que cada acontecimento ocorreu até cada jogada; a linha tracejada é a chance que a regra prevê.`,
+    eixoX: "jogada" },
+  { id: "cartas", unidade: "par de cartas", unidades: "pares de cartas", artigo: "os", zero: "Ainda nenhum par de cartas", zeroLista: "Nenhum par de cartas foi tirado ainda. Aperte Rodar para começar.", vazio: "os últimos pares de cartas aparecem aqui",
+    codigoR: () => `set.seed(${seed()})
+n <- ${n}
+monte <- c(rep("V", 5), rep("P", 5))          # 10 cartas: 5 vermelhas (V) e 5 pretas (P)
+duas <- replicate(n, sample(monte, 2, replace = ${devolve ? "TRUE" : "FALSE"}))   # ${devolve ? "devolvendo a primeira ao monte" : "sem devolver a primeira"}
+cat("X", paste0(duas[1, ], "-", duas[2, ]), "\\n")`,
+    parse: t => t.split("-"),
+    formata: o => `${o[0]}-${o[1]}`,
+    strip: o => [{ texto: o[0], fundo: o[0] === "V" ? VERMELHO : "#222", cor: "#fff" }, { texto: o[1], fundo: o[1] === "V" ? VERMELHO : "#222", cor: "#fff" }],
+    porLinha: 15,
+    eventos: () => [{ titulo: "SEGUNDA VERMELHA, QUANDO A PRIMEIRA FOI VERMELHA", curto: "se a 1ª foi vermelha", cor: VERMELHO, p: devolve ? 0.5 : 4 / 9, teste: o => o[1] === "V", cond: o => o[0] === "V" },
+                    { titulo: "SEGUNDA VERMELHA, QUANDO A PRIMEIRA FOI PRETA", curto: "se a 1ª foi preta", cor: "#222", p: devolve ? 0.5 : 5 / 9, teste: o => o[1] === "V", cond: o => o[0] === "P" }],
+    previsao: () => devolve
+      ? `<b>O que a teoria prevê:</b> devolvendo a primeira carta, o monte volta a ter 5 vermelhas em 10. A segunda carta é vermelha em 50% das vezes, ` +
+        `tanto quando a primeira foi vermelha quanto quando foi preta: a primeira não influencia a segunda.`
+      : `<b>O que a teoria prevê:</b> sem devolver a primeira carta, se ela foi vermelha sobram 4 vermelhas em 9 cartas, e a segunda é vermelha em ` +
+        `4/9 = 44,4% das vezes; se ela foi preta, sobram 5 vermelhas em 9, e a segunda é vermelha em 5/9 = 55,6% das vezes. A primeira carta muda a ` +
+        `chance da segunda.`,
+    verifica: st => { const a = st.cont[0], b = st.cont[1]; return `<b>Previsto e observado:</b> quando a primeira carta foi vermelha, a segunda foi ` +
+      `vermelha em <b>${pct(a.num / a.den)}</b> dos casos (${fmtInt(a.num)} de ${fmtInt(a.den)} casos; a teoria prevê ${pct(devolve ? 0.5 : 4 / 9)}). Quando a primeira ` +
+      `foi preta, a segunda foi vermelha em <b>${pct(b.num / b.den)}</b> (${fmtInt(b.num)} de ${fmtInt(b.den)} casos; a teoria prevê ${pct(devolve ? 0.5 : 5 / 9)}). ` +
+      (devolve ? `Devolvida a carta, as duas frações ficam perto de 50%: a segunda carta não sabe da primeira, e os dois sorteios são independentes.`
+               : `Sem devolver, as duas frações ficam longe uma da outra: a primeira carta muda a chance da segunda, e os dois sorteios não são independentes. ` +
+                 `A chance de uma coisa acontecer quando já se sabe que outra aconteceu chama-se probabilidade condicional, assunto da página seguinte.`) +
+      ` <b>No gráfico:</b> a faixa de cima mostra os últimos pares de cartas; a parte de baixo mostra a fração de vezes em que a segunda carta foi vermelha, separada pela cor da primeira.`; },
+    leitura: () => `Em cima, os últimos pares (V = vermelha, P = preta). Embaixo, a fração de segundas cartas vermelhas, separada pela cor da primeira; a linha tracejada é o que a teoria prevê.`,
+    eixoX: "par de cartas" },
+];
+function seed() { return Math.floor(Math.random() * 100000); }
+
+// monta os controles e a área de resultado de cada parte
+PARTES.forEach(P => {
+  $("parte_" + P.id).innerHTML = `
+    <div class="previsao" id="previsao_${P.id}"></div>
+    <div class="botoes">
+      <button class="rodar" id="rodar_${P.id}" disabled>carregando o R…</button>
+      <button class="sec" id="pausa_${P.id}" disabled>Pausar</button>
+      <button class="sec" id="passo_${P.id}" disabled>${P.id === "cartas" ? "Um par de cada vez" : "Uma jogada de cada vez"}</button>
+      <button class="sec" id="rever_${P.id}" disabled>Rever o sorteio</button>
+    </div>
+    <div class="aviso" id="aviso_${P.id}"></div>
+    <div class="cards" id="cards_${P.id}"></div>
+    <div class="verifica" id="verifica_${P.id}"></div>
+    <canvas class="anim" id="anim_${P.id}"></canvas>
+    <details class="lista" id="lista_${P.id}"><summary>Ver a lista ${P.id === "cartas" ? "dos pares de cartas" : "das jogadas"}</summary><pre id="listatxt_${P.id}"></pre></details>
+    <details><summary>Ver o código R que está rodando (o código muda quando você muda os controles)</summary><pre id="codigo_${P.id}"></pre></details>`;
+  P.dados = null; P.estado = null; P.quadro = null; P.ultimo = 0; P.quadrosLista = 0;
+  $("rodar_" + P.id).addEventListener("click", () => rodar(P));
+  $("pausa_" + P.id).addEventListener("click", () => pausar(P));
+  $("passo_" + P.id).addEventListener("click", () => { if (P.dados) passoAPasso(P); });
+  $("rever_" + P.id).addEventListener("click", () => { if (P.dados) anima(P); });
+  $("lista_" + P.id).addEventListener("toggle", () => { P.quadrosLista = 0; if (P.estado) atualizaLista(P); });
+});
+function montaCards(P) {
+  const c = $("cards_" + P.id); c.innerHTML = "";
+  P.eventos().forEach((ev, i) => {
+    const d = document.createElement("div"); d.className = "card"; d.style.borderColor = ev.cor;
+    d.innerHTML = `<h3 style="color:${ev.cor}">${ev.titulo}</h3><div class="big" id="big_${P.id}_${i}">—</div><p class="nota" id="notacard_${P.id}_${i}">A teoria prevê ${pct(ev.p)}.</p>`;
+    c.appendChild(d);
+  });
+  if (P.extra) { const d = document.createElement("div"); d.className = "card"; d.innerHTML = `<h3>${P.extra.titulo}</h3><div class="faces" id="extra_${P.id}">—</div>`; c.appendChild(d); }
+}
+function atualizaPainel() {
+  document.querySelectorAll("#ns button").forEach(b => b.classList.toggle("ativo", parseInt(b.dataset.v) === n));
+  const seg = DURACAO[n] / 1000 / fator;
+  $("vel_txt").textContent = `cerca de ${fmt(seg, seg < 10 && Math.abs(seg - Math.round(seg)) > 0.05 ? 1 : 0)} segundos para mostrar as ${fmtInt(n)} jogadas`;
+  PARTES.forEach(P => { $("previsao_" + P.id).innerHTML = P.previsao(); $("codigo_" + P.id).textContent = P.codigoR(); });
+}
+function reinicia(P) {
+  pararQuadro(P); P.dados = null;
+  montaCards(P);
+  $("verifica_" + P.id).innerHTML = ""; $("aviso_" + P.id).textContent = "";
+  ["rever", "passo", "pausa"].forEach(b => { $(b + "_" + P.id).disabled = true; }); $("pausa_" + P.id).textContent = "Pausar";
+  P.estado = preparaEstado(P); desenha(P);
+}
+NS.forEach(v => {
+  const b = document.createElement("button"); b.textContent = fmtInt(v); b.dataset.v = v;
+  b.addEventListener("click", () => { n = v; atualizaPainel(); PARTES.forEach(reinicia); });
+  $("ns").appendChild(b);
+});
+$("vel").addEventListener("input", () => { fator = Math.pow(2, parseInt($("vel").value)); atualizaPainel(); });
+Object.entries(ALVOS).forEach(([k, a]) => {
+  const b = document.createElement("button"); b.textContent = a.rotulo; b.dataset.v = k; b.classList.toggle("ativo", k === alvo);
+  b.addEventListener("click", () => { alvo = k; $("alvo").querySelectorAll("button").forEach(x => x.classList.toggle("ativo", x.dataset.v === k)); atualizaPainel(); reinicia(PARTES[0]); });
+  $("alvo").appendChild(b);
+});
+[["nao", "Não devolver"], ["sim", "Devolver"]].forEach(([k, r]) => {
+  const b = document.createElement("button"); b.textContent = r; b.dataset.v = k; b.classList.toggle("ativo", (k === "sim") === devolve);
+  b.addEventListener("click", () => { devolve = k === "sim"; $("devolve").querySelectorAll("button").forEach(x => x.classList.toggle("ativo", x.dataset.v === k)); atualizaPainel(); reinicia(PARTES[2]); });
+  $("devolve").appendChild(b);
+});
+window.addEventListener("resize", () => PARTES.forEach(P => { if (P.estado) desenha(P); }));
+
+let webR, shelter;
+async function iniciar() {
+  const inicio = Date.now();
+  const bots = () => PARTES.map(P => $("rodar_" + P.id));
+  const relogio = setInterval(() => { bots().forEach(b => { b.textContent = `carregando o R… ${Math.round((Date.now() - inicio) / 1000)} s`; }); }, 1000);
+  try {
+    const { WebR } = await import("https://webr.r-wasm.org/latest/webr.mjs");
+    webR = new WebR(); await webR.init(); shelter = await new webR.Shelter();
+    clearInterval(relogio);
+    bots().forEach(b => { b.innerHTML = "&#9654; Rodar"; b.disabled = false; });
+  } catch (e) {
+    clearInterval(relogio);
+    bots().forEach(b => { b.textContent = "o R não carregou"; });
+    $("aviso_dado").textContent = "O R não carregou: " + e.message + ". Verifique a conexão e recarregue a página.";
+  }
+}
+let ocupado = false;
+async function rodar(P) {
+  if (ocupado) return;
+  ocupado = true;
+  atualizaPainel();
+  const bot = $("rodar_" + P.id); bot.disabled = true; bot.textContent = "sorteando…";
+  ["rever", "passo", "pausa"].forEach(b => { $(b + "_" + P.id).disabled = true; });
+  $("aviso_" + P.id).textContent = "";
+  try {
+    const codigo = $("codigo_" + P.id).textContent;
+    const captura = await shelter.captureR(codigo, { withAutoprint: false, captureStreams: true, captureConditions: true });
+    P.dados = null;
+    for (const linha of captura.output) {
+      if (linha.type !== "stdout") continue;
+      if (linha.data.startsWith("X ")) P.dados = linha.data.trim().split(/\s+/).slice(1).map(P.parse);
+    }
+    if (P.dados && P.dados.length === n) {
+      const fim = preparaEstado(P); avanca(P, fim, n, true);
+      $("verifica_" + P.id).innerHTML = P.verifica(fim);
+      $("rever_" + P.id).disabled = false; $("passo_" + P.id).disabled = false;
+      $("cards_" + P.id).scrollIntoView({ behavior: "smooth", block: "start" });
+      anima(P);
+    } else {
+      $("aviso_" + P.id).textContent = "O R não devolveu os valores esperados.";
+    }
+  } catch (e) {
+    $("aviso_" + P.id).textContent = "Erro na execução: " + e.message;
+  } finally {
+    if (shelter) await shelter.purge();
+    bot.innerHTML = "&#9654; Rodar"; bot.disabled = false; ocupado = false;
+  }
+}
+
+// ---------- a animação: as jogadas aparecem uma a uma, e a fração vai assentando ----------
+function preparaEstado(P) {
+  const evs = P.eventos();
+  const st = { k: 0, acum: 0, evs, cont: evs.map(() => ({ num: 0, den: 0 })), hist: evs.map(() => new Float32Array(n).fill(NaN)) };
+  if (P.extra) P.extra.zera(st);
+  return st;
+}
+function avanca(P, st, ate, silencioso) {
+  for (; st.k < ate && st.k < n; st.k++) {
+    const o = P.dados[st.k];
+    st.evs.forEach((ev, i) => { if (ev.cond(o)) { st.cont[i].den++; if (ev.teste(o)) st.cont[i].num++; } st.hist[i][st.k] = st.cont[i].den ? st.cont[i].num / st.cont[i].den : NaN; });
+    if (P.extra) P.extra.conta(st, o);
+  }
+  if (silencioso) return;
+  st.evs.forEach((ev, i) => {
+    const c = st.cont[i];
+    $(`big_${P.id}_${i}`).textContent = c.den ? pct(c.num / c.den) : "—";
+    $(`notacard_${P.id}_${i}`).textContent = c.den ? `Aconteceu ${fmtInt(c.num)} vezes em ${fmtInt(c.den)} ${c.den === 1 ? P.unidade : P.unidades}. A teoria prevê ${pct(ev.p)}.` : `A teoria prevê ${pct(ev.p)}.`;
+  });
+  if (P.extra) $("extra_" + P.id).textContent = P.extra.texto(st);
+}
+function ticksBonitos(a, b) {
+  const bruto = (b - a) / 5, pot = Math.pow(10, Math.floor(Math.log10(bruto)));
+  const m = bruto / pot, passo = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * pot;
+  const out = []; for (let t = Math.ceil(a / passo) * passo; t <= b + 1e-9; t += passo) out.push(Math.round(t / passo) * passo);
+  return out;
+}
+function desenha(P) {
+  const st = P.estado, cv = $("anim_" + P.id);
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 700;
+  const fonte = Math.max(11, Math.round(W / 55));
+  const fam = `-apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
+  // mede a linha de leitura para saber quantas linhas ocupa
+  const g0 = cv.getContext("2d"); g0.setTransform(dpr, 0, 0, dpr, 0, 0); g0.font = `${fonte}px ${fam}`;
+  const linhas = []; let atual = "";
+  for (const pal of P.leitura().split(" ")) { const t = atual ? atual + " " + pal : pal; if (g0.measureText(t).width > W - 16 && atual) { linhas.push(atual); atual = pal; } else atual = t; }
+  linhas.push(atual);
+  const topo = 44 + 15 * linhas.length;
+  const caixa = Math.min(24, Math.floor((W - 28) / P.porLinha) - 3);
+  const altStrip = P.id === "dado" ? caixa + 10 : caixa * 2 + 14;
+  const H = Math.round(topo + altStrip + W * 0.42 + 36);
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  cv.style.height = H + "px";
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  // titulo
+  g.fillStyle = "#1c2430"; g.textAlign = "center"; g.font = `bold ${fonte + 2}px ${fam}`;
+  g.fillText(st.k === 0 ? P.zero : `${fmtInt(st.k)} de ${fmtInt(n)} ${P.unidades}`, W / 2, 22);
+  g.font = `${fonte}px ${fam}`; g.fillStyle = "#555";
+  linhas.forEach((l, i) => g.fillText(l, W / 2, 40 + 15 * i));
+  // a faixa com as ultimas jogadas
+  const ini = Math.max(0, st.k - P.porLinha);
+  const larg = caixa, gap = 3;
+  const total = (st.k - ini) * (larg + gap);
+  let x = (W - total) / 2 + gap / 2;
+  g.font = `bold ${Math.max(10, Math.round(larg * 0.6))}px ui-monospace, Consolas, monospace`;
+  for (let i = ini; i < st.k; i++) {
+    const partes = P.strip(P.dados[i]);
+    partes.forEach((pc, j) => {
+      const y = topo + j * (larg + 2);
+      g.fillStyle = pc.fundo; g.fillRect(x, y, larg, larg);
+      g.fillStyle = pc.cor; g.fillText(pc.texto, x + larg / 2, y + larg * 0.72);
+    });
+    x += larg + gap;
+  }
+  if (st.k === 0) { g.fillStyle = "#8a93a0"; g.font = `${fonte}px ${fam}`; g.fillText(P.vazio, W / 2, topo + larg * 0.7); }
+  // o grafico da fracao
+  const Pl = { x0: 46, x1: W - 14, y0: topo + altStrip + 8, y1: H - 32 };
+  const log = n > 100;
+  const sx = k => Pl.x0 + (log ? Math.log10(k) / Math.log10(n) : (k - 1) / Math.max(1, n - 1)) * (Pl.x1 - Pl.x0);
+  const ymax = Math.min(1, Math.max(...st.evs.map(e => e.p)) * 2.2 + 0.02);
+  const sy = v => Pl.y1 - v / ymax * (Pl.y1 - Pl.y0);
+  g.strokeStyle = "#333"; g.lineWidth = 1; g.beginPath(); g.moveTo(Pl.x0, Pl.y0); g.lineTo(Pl.x0, Pl.y1); g.lineTo(Pl.x1, Pl.y1); g.stroke();
+  g.fillStyle = "#333"; g.font = `${fonte - 1}px ${fam}`;
+  g.textAlign = "right"; for (const t of ticksBonitos(0, ymax)) { if (t > ymax) continue; g.fillText(`${Math.round(t * 100)}%`, Pl.x0 - 4, sy(t) + 4); g.beginPath(); g.moveTo(Pl.x0 - 3, sy(t)); g.lineTo(Pl.x0, sy(t)); g.stroke(); }
+  g.textAlign = "center";
+  const tx = log ? [1, 10, 100, 1000, 10000].filter(t => t <= n) : ticksBonitos(1, n).filter(t => t >= 1 && t <= n);
+  for (const t of tx) { g.beginPath(); g.moveTo(sx(t), Pl.y1); g.lineTo(sx(t), Pl.y1 + 4); g.stroke(); g.fillText(fmtInt(t), sx(t), Pl.y1 + fonte + 3); }
+  g.fillText(P.eixoX + (log ? " (cada marca é 10 vezes a anterior)" : ""), (Pl.x0 + Pl.x1) / 2, H - 6);
+  g.save(); g.beginPath(); g.rect(Pl.x0, Pl.y0 - 2, Pl.x1 - Pl.x0, Pl.y1 - Pl.y0 + 2); g.clip();
+  st.evs.forEach((ev, i) => {
+    g.strokeStyle = ev.cor; g.setLineDash([6, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(Pl.x0, sy(ev.p)); g.lineTo(Pl.x1, sy(ev.p)); g.stroke(); g.setLineDash([]);
+    g.lineWidth = 2.2; g.beginPath(); let aberto = false;
+    for (let k = 1; k <= st.k; k++) { const v = st.hist[i][k - 1]; if (Number.isNaN(v)) { aberto = false; continue; } if (!aberto) { g.moveTo(sx(k), sy(v)); aberto = true; } else g.lineTo(sx(k), sy(v)); }
+    g.stroke();
+  });
+  g.restore();
+  // rotulos dos eventos, à direita, quando há mais de um
+  if (st.evs.length > 1) {
+    g.textAlign = "right"; g.font = `${fonte - 1}px ${fam}`;
+    st.evs.forEach((ev, i) => { g.fillStyle = ev.cor; g.fillText(ev.curto, Pl.x1 - 2, Pl.y0 + 12 + 14 * i); });
+  }
+  atualizaLista(P);
+}
+function atualizaLista(P) {
+  const st = P.estado; if (!$("lista_" + P.id).open) return;
+  if (st.k > 0 && st.k < n && (++P.quadrosLista % 6) !== 0) return;
+  if (!P.dados || st.k === 0) { $("listatxt_" + P.id).textContent = P.zeroLista; return; }
+  const A = P.artigo === "os" ? "Os" : "As";
+  $("listatxt_" + P.id).textContent = `${st.k < n ? `${A} ${fmtInt(st.k)} ${P.unidades} até agora` : `${A} ${fmtInt(n)} ${P.unidades}`}, na ordem em que saíram:\n` +
+    P.dados.slice(0, st.k).map(P.formata).join("   ");
+}
+function pararQuadro(P) { if (P.quadro) { cancelAnimationFrame(P.quadro); P.quadro = null; } }
+function velocidade() { return n / (DURACAO[n] || 5000) * 1000 * fator; }
+function anima(P) {
+  pararQuadro(P);
+  P.estado = preparaEstado(P); montaCards(P); desenha(P);
+  continuar(P);
+}
+function continuar(P) {
+  P.ultimo = performance.now();
+  $("pausa_" + P.id).textContent = "Pausar"; $("pausa_" + P.id).disabled = false;
+  P.quadro = requestAnimationFrame(t => quadroSeguinte(P, t));
+}
+function quadroSeguinte(P, agora) {
+  const st = P.estado;
+  const dt = Math.min(0.25, (agora - P.ultimo) / 1000); P.ultimo = agora;
+  st.acum = Math.min(n, st.acum + dt * velocidade());
+  const ate = Math.floor(st.acum);
+  if (ate > st.k) { avanca(P, st, ate); desenha(P); }
+  if (st.k < n) P.quadro = requestAnimationFrame(t => quadroSeguinte(P, t));
+  else { P.quadro = null; $("pausa_" + P.id).disabled = true; }
+}
+function pausar(P) {
+  if (P.quadro) { pararQuadro(P); $("pausa_" + P.id).textContent = "Continuar"; }
+  else if (P.estado && P.dados && P.estado.k < n) continuar(P);
+}
+function passoAPasso(P) {
+  if (!P.estado || P.estado.k >= n) { pararQuadro(P); P.estado = preparaEstado(P); montaCards(P); }
+  if (P.quadro) { pararQuadro(P); }
+  avanca(P, P.estado, P.estado.k + 1); P.estado.acum = P.estado.k; desenha(P);
+  $("pausa_" + P.id).disabled = P.estado.k >= n; if (P.estado.k < n) $("pausa_" + P.id).textContent = "Continuar";
+}
+
+atualizaPainel();
+PARTES.forEach(reinicia);
+iniciar();
+</script>
+</body>
+</html>
