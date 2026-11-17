@@ -75,8 +75,17 @@
            border-top: 1px solid var(--borda); padding-top: 12px; }
   @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="laboratorio.css">
 </head>
 <body>
+<header class="faixa"><div class="faixa-in">
+  <a class="marca" href="./">Quase Normal</a>
+  <span class="passo">Passo 3 de 15 · Estatística</span>
+  <nav class="prox"><a href="laboratorio-probabilidade-webr.html">&larr; Probabilidade condicional</a><a href="laboratorio-descritiva-webr.html">Média e mediana &rarr;</a></nav>
+</div></header>
+<div class="wrap">
 
 <h1>Laboratório das Variáveis Aleatórias</h1>
 <p class="sub">Estatística. Esta página roda no navegador, inclusive no celular.</p>
@@ -163,6 +172,7 @@ escolheu, um a um, e as barras azuis (a frequência observada) vão se aproximan
     <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
   </p>
 </footer>
+</div>
 
 <script type="module">
 const $ = id => document.getElementById(id);
@@ -283,7 +293,7 @@ function atualizaVel() {
 // um controle mudou: limpa o sorteio anterior e mostra só a teoria nova
 function reinicia() {
   pararQuadro();
-  dados = null;
+  dados = null; dica = null;
   $("res_media").textContent = "—"; $("res_dp").textContent = "—";
   $("verifica").innerHTML = ""; $("aviso").textContent = "";
   $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true; $("pausa").textContent = "Pausar";
@@ -395,7 +405,9 @@ function ticksBonitos(a, b) {
   const out = []; for (let t = Math.ceil(a / passo) * passo; t <= b + 1e-9; t += passo) out.push(Math.round(t / passo) * passo);
   return out;
 }
-function desenha(st) {
+const FONTE = '"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+let layout = null, dica = null;
+function desenha(st, d = dica) {
   const cv = $("anim");
   const dpr = window.devicePixelRatio || 1;
   const W = cv.clientWidth || 700, H = Math.round(W * 0.6);
@@ -407,9 +419,9 @@ function desenha(st) {
   const P = { x0: 14, x1: W - 14, y0: 50, y1: H - 36 };
   // titulo em duas linhas (a segunda pode quebrar)
   g.fillStyle = "#1c2430"; g.textAlign = "center";
-  g.font = `bold ${fonte + 2}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
+  g.font = `bold ${fonte + 2}px ${FONTE}`;
   g.fillText(st.k === 0 ? `${dist.nome}: a distribuição teórica, antes de sortear` : `${fmtInt(st.k)} de ${fmtInt(n)} valores sorteados`, W / 2, 22);
-  g.font = `${fonte}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
+  g.font = `${fonte}px ${FONTE}`;
   g.fillStyle = "#555";
   // a linha de leitura quebra em duas quando nao cabe (celular)
   const leitura = st.k === 0 ? "Em vermelho está a chance que a teoria dá a cada valor. Aperte Rodar e veja as barras azuis se aproximarem do vermelho."
@@ -426,6 +438,7 @@ function desenha(st) {
   let ymax = st.ymax;
   for (let i = 0; i < st.nb; i++) { const h = dist.discreta ? st.contagens[i] / Math.max(1, st.k) : st.contagens[i] / Math.max(1, st.k) / st.largura; if (h > ymax) ymax = h; }
   const sy = v => P.y1 - v / ymax * (P.y1 - P.y0);
+  layout = { sx, sy, P, st, xa, xb };
   // barras
   g.fillStyle = azul;
   for (let i = 0; i < st.nb; i++) {
@@ -458,8 +471,45 @@ function desenha(st) {
   // media teorica
   const m = dist.media(valores);
   g.strokeStyle = vermelho; g.setLineDash([6, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(sx(m), P.y0); g.lineTo(sx(m), P.y1); g.stroke(); g.setLineDash([]);
+  desenhaDica(g, W, fonte, d);
   atualizaLista(st);
 }
+// ---------- o valor ao tocar ou passar o mouse ----------
+function desenhaDica(g, W, fonte, d) {
+  if (!d) return;
+  g.font = `600 ${fonte}px ${FONTE}`;
+  const tw = g.measureText(d.texto).width + 14, th = fonte + 12;
+  let x = d.x + 12, y = d.y - th - 8;
+  if (x + tw > W - 4) x = d.x - tw - 12;
+  if (y < 4) y = d.y + 12;
+  g.fillStyle = "rgba(255,255,255,0.96)"; g.strokeStyle = "#9aa7b8"; g.lineWidth = 1;
+  g.beginPath(); g.roundRect(x, y, tw, th, 6); g.fill(); g.stroke();
+  g.fillStyle = "#1b2330"; g.textAlign = "left"; g.fillText(d.texto, x + 7, y + th - 8);
+  g.beginPath(); g.arc(d.x, d.y, 3.5, 0, 2 * Math.PI); g.fill();
+}
+const pctD = x => fmt(x * 100, 1) + "%";
+function achaBarra(x, y) {
+  if (!dados || !layout || !estado || estado.k === 0) return null;
+  const { sx, sy, P, st, xa, xb } = layout;
+  if (x < P.x0 || x > P.x1 || y < P.y0 || y > P.y1 + 4) return null;
+  const v = xa + (x - P.x0) / (P.x1 - P.x0) * (xb - xa);
+  if (dist.discreta) {
+    const k = Math.round(v), i = k - st.kmin; if (i < 0 || i >= st.nb) return null;
+    const c = st.contagens[i], j = teoria.x.indexOf(k);
+    return { x: sx(k), y: sy(c / st.k), texto: `valor ${k}: ${fmtInt(c)} de ${fmtInt(st.k)} (${pctD(c / st.k)})` + (j >= 0 ? `; a teoria dá ${pctD(teoria.p[j])}` : "") };
+  }
+  const i = Math.floor((v - st.a) / st.largura); if (i < 0 || i >= st.nb) return null;
+  const c = st.contagens[i], l = st.a + i * st.largura;
+  return { x: sx(l + st.largura / 2), y: sy(c / st.k / st.largura), texto: `de ${fmt(l)} a ${fmt(l + st.largura)}: ${fmtInt(c)} de ${fmtInt(st.k)} (${pctD(c / st.k)})` };
+}
+(() => {
+  const cv = $("anim");
+  const poe = d => { if ((d && d.texto) !== (dica && dica.texto)) { dica = d; if (estado) desenha(estado, dica); } };
+  const trata = e => { const r = cv.getBoundingClientRect(); poe(achaBarra(e.clientX - r.left, e.clientY - r.top)); };
+  cv.addEventListener("pointermove", trata);
+  cv.addEventListener("pointerdown", trata);
+  cv.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") poe(null); });   // no celular, o toque deixa o valor na tela
+})();
 let quadrosLista = 0;
 function atualizaLista(st) {
   if (!$("lista").open) return;

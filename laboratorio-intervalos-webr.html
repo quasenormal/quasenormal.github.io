@@ -53,8 +53,17 @@
            border-top: 1px solid var(--borda); padding-top: 12px; }
   @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="laboratorio.css">
 </head>
 <body>
+<header class="faixa"><div class="faixa-in">
+  <a class="marca" href="./">Quase Normal</a>
+  <span class="passo">Passo 7 de 15 · Estatística</span>
+  <nav class="prox"><a href="laboratorio-tcl-webr.html">&larr; Teorema Central do Limite</a><a href="laboratorio-hipoteses-webr.html">Testes de hipótese &rarr;</a></nav>
+</div></header>
+<div class="wrap">
 
 <h1>Laboratório dos Intervalos de Confiança</h1>
 <p class="sub">Estatística. Esta página roda no navegador, inclusive no celular.</p>
@@ -131,6 +140,7 @@ conter a média verdadeira.</div>
     <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
   </p>
 </footer>
+</div>
 
 <script type="module">
 const NIVEIS = [80, 90, 95, 99];

@@ -67,8 +67,17 @@
            border-top: 1px solid var(--borda); padding-top: 12px; }
   @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="laboratorio.css">
 </head>
 <body>
+<header class="faixa"><div class="faixa-in">
+  <a class="marca" href="./">Quase Normal</a>
+  <span class="passo">Passo 2 de 15 · Estatística</span>
+  <nav class="prox"><a href="laboratorio-probabilidade-basica-webr.html">&larr; Probabilidade</a><a href="laboratorio-distribuicoes-webr.html">Variáveis aleatórias &rarr;</a></nav>
+</div></header>
+<div class="wrap">
 
 <h1>Laboratório da Probabilidade Condicional</h1>
 <p class="sub">Estatística. Esta página roda no navegador, inclusive no celular.</p>
@@ -157,6 +166,7 @@ quem tem a doença, com a chance que você escolheu, e aplica o exame a cada uma
     <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
   </p>
 </footer>
+</div>
 
 <script type="module">
 const $ = id => document.getElementById(id);
@@ -359,7 +369,7 @@ function preparaCanvas(cv, H) {
   return { g, W };
 }
 function titulo(g, W, l1, l2) {
-  const fam = `-apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
+  const fam = `"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
   const fonte = Math.max(11, Math.round(W / 55));
   // se a linha nao couber na largura, a fonte encolhe (celular)
   const cabe = (texto, px, peso) => { let f = px; for (; f > 8; f -= 0.5) { g.font = `${peso} ${f}px ${fam}`; if (g.measureText(texto).width <= W - 16) break; } };

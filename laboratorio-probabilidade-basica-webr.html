@@ -61,8 +61,17 @@
            border-top: 1px solid var(--borda); padding-top: 12px; }
   @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="laboratorio.css">
 </head>
 <body>
+<header class="faixa"><div class="faixa-in">
+  <a class="marca" href="./">Quase Normal</a>
+  <span class="passo">Passo 1 de 15 · Estatística</span>
+  <nav class="prox"><a href="./">&larr; A trilha</a><a href="laboratorio-probabilidade-webr.html">Probabilidade condicional &rarr;</a></nav>
+</div></header>
+<div class="wrap">
 
 <h1>Laboratório da Probabilidade</h1>
 <p class="sub">Estatística. Esta página roda no navegador, inclusive no celular.</p>
@@ -136,6 +145,7 @@ primeira foi vermelha dos casos em que foi preta.</p>
     <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
   </p>
 </footer>
+</div>
 
 <script type="module">
 const $ = id => document.getElementById(id);
@@ -254,6 +264,13 @@ PARTES.forEach(P => {
   $("passo_" + P.id).addEventListener("click", () => { if (P.dados) passoAPasso(P); });
   $("rever_" + P.id).addEventListener("click", () => { if (P.dados) anima(P); });
   $("lista_" + P.id).addEventListener("toggle", () => { P.quadrosLista = 0; if (P.estado) atualizaLista(P); });
+  P.layout = null; P.dica = null;
+  const cvP = $("anim_" + P.id);
+  const poe = d => { if ((d && d.texto) !== (P.dica && P.dica.texto)) { P.dica = d; if (P.estado) desenha(P); } };
+  const trata = e => { const r = cvP.getBoundingClientRect(); poe(achaFracao(P, e.clientX - r.left, e.clientY - r.top)); };
+  cvP.addEventListener("pointermove", trata);
+  cvP.addEventListener("pointerdown", trata);
+  cvP.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") poe(null); });   // no celular, o toque deixa o valor na tela
 });
 function montaCards(P) {
   const c = $("cards_" + P.id); c.innerHTML = "";
@@ -271,6 +288,7 @@ function atualizaPainel() {
   PARTES.forEach(P => { $("previsao_" + P.id).innerHTML = P.previsao(); $("codigo_" + P.id).textContent = P.codigoR(); });
 }
 function reinicia(P) {
+  P.dica = null;
   pararQuadro(P); P.dados = null;
   montaCards(P);
   $("verifica_" + P.id).innerHTML = ""; $("aviso_" + P.id).textContent = "";
@@ -371,12 +389,13 @@ function ticksBonitos(a, b) {
   const out = []; for (let t = Math.ceil(a / passo) * passo; t <= b + 1e-9; t += passo) out.push(Math.round(t / passo) * passo);
   return out;
 }
+const FONTE = '"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 function desenha(P) {
   const st = P.estado, cv = $("anim_" + P.id);
   const dpr = window.devicePixelRatio || 1;
   const W = cv.clientWidth || 700;
   const fonte = Math.max(11, Math.round(W / 55));
-  const fam = `-apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
+  const fam = FONTE;
   // mede a linha de leitura para saber quantas linhas ocupa
   const g0 = cv.getContext("2d"); g0.setTransform(dpr, 0, 0, dpr, 0, 0); g0.font = `${fonte}px ${fam}`;
   const linhas = []; let atual = "";
@@ -416,6 +435,10 @@ function desenha(P) {
   const sx = k => Pl.x0 + (log ? Math.log10(k) / Math.log10(n) : (k - 1) / Math.max(1, n - 1)) * (Pl.x1 - Pl.x0);
   const ymax = Math.min(1, Math.max(...st.evs.map(e => e.p)) * 2.2 + 0.02);
   const sy = v => Pl.y1 - v / ymax * (Pl.y1 - Pl.y0);
+  P.layout = { sx, sy, Pl, log };
+  // grade leve
+  g.strokeStyle = "#e9edf2"; g.lineWidth = 1;
+  for (const t of ticksBonitos(0, ymax)) { if (t > ymax || t <= 0) continue; g.beginPath(); g.moveTo(Pl.x0, sy(t)); g.lineTo(Pl.x1, sy(t)); g.stroke(); }
   g.strokeStyle = "#333"; g.lineWidth = 1; g.beginPath(); g.moveTo(Pl.x0, Pl.y0); g.lineTo(Pl.x0, Pl.y1); g.lineTo(Pl.x1, Pl.y1); g.stroke();
   g.fillStyle = "#333"; g.font = `${fonte - 1}px ${fam}`;
   g.textAlign = "right"; for (const t of ticksBonitos(0, ymax)) { if (t > ymax) continue; g.fillText(`${Math.round(t * 100)}%`, Pl.x0 - 4, sy(t) + 4); g.beginPath(); g.moveTo(Pl.x0 - 3, sy(t)); g.lineTo(Pl.x0, sy(t)); g.stroke(); }
@@ -436,7 +459,33 @@ function desenha(P) {
     g.textAlign = "right"; g.font = `${fonte - 1}px ${fam}`;
     st.evs.forEach((ev, i) => { g.fillStyle = ev.cor; g.fillText(ev.curto, Pl.x1 - 2, Pl.y0 + 12 + 14 * i); });
   }
+  desenhaDica(g, W, fonte, P.dica);
   atualizaLista(P);
+}
+// ---------- o valor ao tocar ou passar o mouse ----------
+function desenhaDica(g, W, fonte, d) {
+  if (!d) return;
+  g.font = `600 ${fonte}px ${FONTE}`;
+  const tw = g.measureText(d.texto).width + 14, th = fonte + 12;
+  let x = d.x + 12, y = d.y - th - 8;
+  if (x + tw > W - 4) x = d.x - tw - 12;
+  if (y < 4) y = d.y + 12;
+  g.fillStyle = "rgba(255,255,255,0.96)"; g.strokeStyle = "#9aa7b8"; g.lineWidth = 1;
+  g.beginPath(); g.roundRect(x, y, tw, th, 6); g.fill(); g.stroke();
+  g.fillStyle = "#1b2330"; g.textAlign = "left"; g.fillText(d.texto, x + 7, y + th - 8);
+  g.beginPath(); g.arc(d.x, d.y, 3.5, 0, 2 * Math.PI); g.fill();
+}
+function achaFracao(P, x, y) {
+  const st = P.estado; if (!st || !P.layout || st.k === 0) return null;
+  const { sx, sy, Pl, log } = P.layout;
+  if (x < Pl.x0 || x > Pl.x1 || y < Pl.y0 - 4 || y > Pl.y1 + 4) return null;
+  const f = (x - Pl.x0) / (Pl.x1 - Pl.x0);
+  let k = log ? Math.round(Math.pow(10, f * Math.log10(n))) : Math.round(1 + f * Math.max(1, n - 1));
+  k = Math.min(st.k, Math.max(1, k));
+  const partes = st.evs.map((ev, i) => { const v = st.hist[i][k - 1]; return (st.evs.length > 1 ? ev.curto + " " : "") + (Number.isNaN(v) ? "—" : pct(v)); });
+  const teo = st.evs.length === 1 ? ` (a teoria dá ${pct(st.evs[0].p)})` : "";
+  const v0 = st.hist[0][k - 1];
+  return { x: sx(k), y: Number.isNaN(v0) ? Pl.y1 : sy(v0), texto: `após ${fmtInt(k)} ${k === 1 ? P.unidade : P.unidades}: ${partes.join(" · ")}${teo}` };
 }
 function atualizaLista(P) {
   const st = P.estado; if (!$("lista_" + P.id).open) return;

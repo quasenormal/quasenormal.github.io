@@ -63,8 +63,17 @@
            border-top: 1px solid var(--borda); padding-top: 12px; }
   @media (max-width: 640px) { .ctl { grid-template-columns: 1fr; gap: 2px; } .cards { grid-template-columns: 1fr; } }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="laboratorio.css">
 </head>
 <body>
+<header class="faixa"><div class="faixa-in">
+  <a class="marca" href="./">Quase Normal</a>
+  <span class="passo">Passo 10 de 15 · Econometria</span>
+  <nav class="prox"><a href="laboratorio-correlacao-webr.html">&larr; Correlação</a><a href="laboratorio-inferencia-webr.html">Inferência &rarr;</a></nav>
+</div></header>
+<div class="wrap">
 
 <h1>Laboratório dos Mínimos Quadrados</h1>
 <p class="sub">Estatística e econometria. Esta página roda no navegador, inclusive no celular.</p>
@@ -144,6 +153,7 @@ os mesmos pontos, com um quadrado para cada erro, e soma as áreas.</p>
     <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
   </p>
 </footer>
+</div>
 
 <script type="module">
 // cada cenario: como y e gerado; x vai de 0 a 10 em todos
