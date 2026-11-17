@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratório da Inferência — R no navegador</title>
+<meta name="description" content="Que confiança merece o coeficiente de uma regressão? Você conhece a verdade, faz uma pesquisa e depois outras 499 iguais, e vê quanto a inclinação muda de uma para outra: é o erro-padrão, de onde saem o intervalo de confiança e o p-valor. A página também mostra por que «significativo» não quer dizer «grande». Simulação com R rodando no navegador, inclusive no celular.">
+<style>
+  :root { color-scheme: light; --azul:#1a4f8b; --cinza:#f4f5f7; --borda:#d8dce2; --verde:#157347; --verm:#b02a37; }
+  * { box-sizing: border-box; }
+  body { background: #fff; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+         margin: 0; padding: 16px; max-width: 820px; margin-inline: auto;
+         color: #1c2430; line-height: 1.5; }
+  h1 { font-size: 1.3rem; color: var(--azul); margin-bottom: 4px; }
+  h2 { font-size: 1.02rem; color: var(--azul); margin: 22px 0 6px; }
+  .sub { color: #5a6573; font-size: .92rem; margin-top: 0; }
+  .chamada { border-left: 5px solid var(--azul); background: #eef3fa; padding: 12px 14px;
+             margin: 14px 0; font-size: 1.02rem; border-radius: 0 10px 10px 0; }
+  .chamada b { color: var(--azul); }
+  .chamada p { margin: 0; } .chamada p + p { margin-top: 8px; }
+  .nota { font-size: .92rem; color: #5a6573; margin: 8px 0; }
+  .ctl { font-size: .92rem; margin: 8px 0 4px; }
+  .opcoes { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+  .opcoes button { border: 1px solid var(--borda); background: #fff; border-radius: 8px;
+                   padding: 9px 14px; font-size: 1rem; font-weight: 700; cursor: pointer;
+                   font-family: ui-monospace, Consolas, monospace; min-width: 64px; }
+  .opcoes button.texto { font-family: inherit; font-weight: 600; font-size: .9rem; }
+  .opcoes button.ativo { background: var(--azul); color: #fff; border-color: var(--azul); }
+  .veloc { font-size: .92rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+  .veloc input { width: 170px; }
+  .veloc span { color: #5a6573; }
+  .previsao { font-size: .95rem; background: #fffbe8; border: 1px solid #e8ddb0;
+              border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+  .botoes { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; align-items: center; }
+  .botoes button { border: 0; border-radius: 8px; padding: 12px 22px; font-size: 1rem;
+           font-weight: 600; cursor: pointer; }
+  .botoes button.principal { background: var(--azul); color: #fff; min-width: 140px; }
+  .botoes button.principal:disabled { background: #9fb3cb; cursor: wait; }
+  .botoes button.sec { background: #fff; color: var(--azul); border: 1px solid var(--azul); padding: 10px 16px; }
+  .botoes button.sec:disabled { color: #8a93a0; border-color: var(--borda); cursor: default; }
+  .aviso { font-size: .9rem; color: var(--verm); font-weight: 600; margin: 6px 0; min-height: 1.2em; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .card { border: 2px solid var(--borda); border-radius: 10px; padding: 10px 12px; }
+  .card h3 { margin: 0 0 4px; font-size: .9rem; }
+  .card .big { font-size: 1.7rem; font-weight: 800; font-family: ui-monospace, Consolas, monospace; }
+  .card .big small { font-size: .95rem; font-weight: 600; font-family: inherit; color: #5a6573; }
+  .card.centro { border-color: var(--verde); } .card.centro h3 { color: var(--verde); }
+  .card.espalha { border-color: var(--azul); } .card.espalha h3 { color: var(--azul); }
+  .card .nota { font-size: .8rem; color: #5a6573; margin: 0; }
+  .verifica { font-size: .92rem; margin-top: 8px; }
+  canvas { width: 100%; height: auto; border: 1px solid var(--borda); border-radius: 10px;
+           margin-top: 12px; background: #fff; display: block; }
+  .lista { margin-top: 6px; font-size: .88rem; }
+  .lista summary { cursor: pointer; color: var(--azul); text-align: right; }
+  .lista pre { max-height: 220px; overflow: auto; background: var(--cinza); color: #1c2430; border: 1px solid var(--borda);
+               border-radius: 8px; padding: 8px 10px; font-size: .82rem; white-space: pre-wrap; margin-top: 6px; }
+  details { margin-top: 12px; font-size: .88rem; }
+  details pre { background: #10151c; color: #d7e3f0; border-radius: 10px; padding: 12px;
+                font-size: .8rem; overflow-x: auto; white-space: pre-wrap; }
+  details.eq div { background: var(--cinza); border: 1px solid var(--borda); border-radius: 10px; padding: 8px 12px; font-size: .92rem; }
+  details.eq p { margin: 6px 0; }
+  .f { font-family: ui-monospace, Consolas, monospace; font-size: .9rem; white-space: nowrap; }
+  .box { background: var(--cinza); border: 1px solid var(--borda);
+         border-radius: 10px; padding: 12px; margin: 12px 0; font-size: .92rem; }
+  footer { color: #5a6573; font-size: .85rem; margin-top: 24px;
+           border-top: 1px solid var(--borda); padding-top: 12px; }
+  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>Laboratório da Inferência</h1>
+<p class="sub">Econometria. Esta página roda no navegador, inclusive no celular.</p>
+
+<div class="chamada">
+  <p><b>Cada hora de estudo por semana vale quantos pontos na nota?</b> Uma pesquisa com alunos
+  responde com um número: a inclinação da reta ajustada aos dados. Que confiança merece esse número?
+  Outra pesquisa, com outros alunos, daria outro número.</p>
+  <p>Nesta página você conhece a verdade: sabe quantos pontos uma hora de estudo vale de fato. Faz
+  uma pesquisa e vê o número que ela devolve. Depois manda fazer outras 499 pesquisas iguais e vê
+  quanto o número muda de uma para outra. Esse "quanto muda" é o erro-padrão, e dele saem o intervalo
+  de confiança e o p-valor.</p>
+</div>
+
+<p class="nota">Em cada pesquisa, <b>n</b> alunos informam quantas horas estudam por semana (entre 0 e 15)
+e a nota que tiraram. A nota de cada aluno é a soma de duas partes: a verdade (os pontos que as horas valem de fato) e um resto, que reúne tudo o mais de que a nota depende. A pesquisa ajusta a reta de mínimos quadrados e devolve a inclinação.</p>
+
+<h2>1. Escolha a verdade: quantos pontos vale uma hora de estudo?</h2>
+<div class="ctl">Esse número é o efeito verdadeiro: quanto a nota sobe, em média, a cada hora de estudo por semana.
+As pesquisas não sabem esse número; você sabe.</div>
+<div class="opcoes" id="efs"></div>
+
+<h2>2. Escolha quantos alunos cada pesquisa entrevista</h2>
+<div class="ctl"><b>n</b> = quantos alunos cada pesquisa entrevista.</div>
+<div class="opcoes" id="ns"></div>
+
+<h2>3. Escolha quanto a nota depende de outras coisas</h2>
+<div class="ctl">Além das horas de estudo, a nota depende de muita coisa que a pesquisa não mede. Aqui
+você escolhe o tamanho desse resto: o desvio-padrão da nota entre alunos com as mesmas horas.</div>
+<div class="opcoes" id="rs"></div>
+
+<div class="previsao" id="previsao"></div>
+
+<div class="botoes">
+  <button id="rodar" class="principal" disabled>carregando o R…</button>
+  <button id="pausa" class="sec" disabled>Pausar</button>
+  <button id="passo" class="sec" disabled>Uma pesquisa de cada vez</button>
+  <button id="repetir" class="sec" disabled>Rever as pesquisas</button>
+</div>
+<div class="veloc"><label for="vel">Velocidade das pesquisas:</label>
+  <input type="range" id="vel" min="-2" max="2" step="1" value="0"> <span id="vel_txt"></span></div>
+<div class="aviso" id="aviso"></div>
+
+<div id="resultado">
+  <div class="cards">
+    <div class="card centro"><h3>A INCLINAÇÃO DA SUA PESQUISA</h3>
+      <div class="big" id="res_sua">—</div>
+      <p class="nota" id="nota_sua"></p></div>
+    <div class="card espalha"><h3>QUANTO AS INCLINAÇÕES SE ESPALHAM</h3>
+      <div class="big" id="res_sd">—</div>
+      <p class="nota" id="nota_sd"></p></div>
+    <div class="card espalha"><h3>INTERVALOS QUE CONTÊM O EFEITO VERDADEIRO</h3>
+      <div class="big" id="res_cob">—</div>
+      <p class="nota" id="nota_cob"></p></div>
+    <div class="card espalha"><h3 id="lbl_sig">PESQUISAS QUE DISSERAM «HÁ EFEITO»</h3>
+      <div class="big" id="res_sig">—</div>
+      <p class="nota" id="nota_sig"></p></div>
+  </div>
+  <div class="verifica" id="verifica"></div>
+  <canvas id="anim1"></canvas>
+  <canvas id="anim2"></canvas>
+  <details class="lista" id="lista"><summary>Ver a lista das pesquisas</summary><pre id="lista_txt"></pre></details>
+</div>
+
+<details class="eq"><summary>Para quem quer a fórmula</summary><div id="formula"></div></details>
+
+<details><summary>Ver o código R que está rodando (muda com os controles)</summary>
+<pre id="codigoview"></pre></details>
+
+<h2>4. Significativo não é grande</h2>
+<p class="nota">Agora você compara duas pesquisas, feitas em dois mundos diferentes. Na pesquisa A, cada hora de estudo vale 0,1 ponto de
+verdade, e a pesquisa entrevista 10.000 alunos. Na pesquisa B, cada hora vale 2 pontos de verdade, e a
+pesquisa entrevista 5 alunos. Nas duas, o resto da nota tem desvio-padrão de 10 pontos. Qual das duas vai dizer «há efeito», isto é, qual das duas vai encontrar um resultado «significativo»?</p>
+<div class="botoes">
+  <button id="rodar2" class="principal" disabled>carregando o R…</button>
+  <span class="nota" style="margin:0">Cada clique sorteia as duas pesquisas de novo.</span>
+</div>
+<div class="aviso" id="aviso2"></div>
+<div id="resultado2">
+  <div class="cards">
+    <div class="card espalha"><h3>PESQUISA A: 10.000 ALUNOS, EFEITO VERDADEIRO DE 0,1 PONTO</h3>
+      <div class="big" id="res_a">—</div>
+      <p class="nota" id="nota_a"></p></div>
+    <div class="card espalha"><h3>PESQUISA B: 5 ALUNOS, EFEITO VERDADEIRO DE 2 PONTOS</h3>
+      <div class="big" id="res_b">—</div>
+      <p class="nota" id="nota_b"></p></div>
+  </div>
+  <div class="verifica" id="verifica2"></div>
+  <canvas id="anim3"></canvas>
+</div>
+<details><summary>Ver o código R desta parte</summary>
+<pre id="codigoview2"></pre></details>
+
+<section class="box">
+  <h2 style="margin-top:0">Como citar esta página</h2>
+  <p style="margin:.3rem 0">
+    FIRMO, Marcio Gold. <i>Laboratório da Inferência</i>. 2026.
+    Disponível em: https://quasenormal.github.io/laboratorio-inferencia-webr.html
+  </p>
+  <p style="margin:.3rem 0 0">
+    Uso livre para ensino, com citação da autoria; uso comercial não autorizado
+    (<a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">licença</a>).
+    Se adaptar o material, indique o que foi alterado.
+  </p>
+</section>
+
+<footer>
+  Esta página é o passo 11 da trilha do Quase Normal. O passo anterior é o
+  <a href="laboratorio-mqo-webr.html">Laboratório dos Mínimos Quadrados</a>, que mostra como a reta é
+  ajustada; o passo seguinte é o <a href="laboratorio-vies-webr.html">Laboratório do Viés de Variável
+  Omitida</a>. O <a href="laboratorio-hipoteses-webr.html">Laboratório dos Testes de Hipótese</a> conta a
+  mesma história para uma média. Tecnologia: <a href="https://docs.r-wasm.org/webr/latest/">webR</a>, uma
+  versão do R que roda dentro do navegador.
+  <p style="margin:.7rem 0 0">
+    <a href="./">Quase Normal</a> · projeto de extensão da UERJ · © Marcio Gold Firmo · Uso livre para ensino, sob
+    <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.pt-br">CC BY-NC 4.0</a>
+    — cite a autoria; uso comercial não autorizado.
+    <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
+  </p>
+</footer>
+
+<script type="module">
+const EFS = [{ v: 0, r: "nada (0)" }, { v: 0.5, r: "pouco (0,5 ponto)" }, { v: 2, r: "muito (2 pontos)" }];
+const NS = [20, 100, 1000];
+const RS = [{ v: 4, r: "pouco (4 pontos)" }, { v: 10, r: "muito (10 pontos)" }];
+const K = 500;                 // pesquisas
+const DURACAO = 6000;          // ms para mostrar as K pesquisas na velocidade normal
+const SDX = 15 / Math.sqrt(12);   // desvio-padrão das horas, espalhadas por igual entre 0 e 15
+
+const $ = id => document.getElementById(id);
+const fmt = (x, d = 2) => { if (x === null || x === undefined || Number.isNaN(x)) return "—"; let t = x.toFixed(d); if (parseFloat(t) === 0) t = t.replace("-", ""); return t.replace(".", ",").replace("-", "−"); };
+const fmtEf = x => String(x).replace(".", ",");   // o efeito verdadeiro: 0, 0,5 ou 2
+const fmtInt = x => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+const pct = x => (Math.round(x * 100)).toFixed(0) + "%";
+const fmtP = p => p < 0.001 ? "p < 0,001" : "p = " + fmt(p, 3);
+const pontos = x => `${fmt(x)} ${Math.abs(x) === 1 ? "ponto" : "pontos"}`;
+let efeito = 0.5, n = 100, ruido = 10;
+let seed = Math.floor(Math.random() * 100000);
+let fator = 1;
+let dados = null;      // { horas, nota, a, b, e, p, l, u }
+
+function erf(x) {
+  const s = Math.sign(x); x = Math.abs(x);
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  const t = 1 / (1 + p * x);
+  return s * (1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x));
+}
+const Phi = x => 0.5 * (1 + erf(x / Math.SQRT2));
+function seTeo() { return ruido / (Math.sqrt(n) * SDX); }
+function poderTeorico() { const d = efeito / seTeo(); return (1 - Phi(1.96 - d)) + Phi(-1.96 - d); }
+
+function codigoR() {
+  return `set.seed(${seed})
+n <- ${n}          # alunos entrevistados em cada pesquisa
+efeito <- ${efeito}    # pontos que cada hora de estudo vale de fato (a verdade, que a pesquisa não sabe)
+ruido <- ${ruido}      # desvio-padrão do que a nota depende além das horas
+K <- ${K}         # quantas pesquisas
+
+pesquisa <- function() {
+  horas <- runif(n, 0, 15)                                   # horas de estudo por semana
+  nota  <- 60 + efeito * (horas - 7.5) + rnorm(n, 0, ruido)  # a nota: a verdade mais o resto
+  list(reta = lm(nota ~ horas), horas = horas, nota = nota)  # a reta de mínimos quadrados
+}
+sua <- pesquisa()                   # a sua pesquisa
+summary(sua$reta)$coefficients      # inclinação, erro-padrão, estatística t e p-valor
+confint(sua$reta)                   # intervalo de 95% para a inclinação
+
+resumo <- function(reta) c(coef(reta), summary(reta)$coefficients["horas", c("Std. Error", "Pr(>|t|)")],
+                           confint(reta)["horas", ])
+outras <- replicate(K - 1, resumo(pesquisa()$reta))   # mais ${K - 1} pesquisas iguais
+todas <- cbind(resumo(sua$reta), outras)              # uma coluna por pesquisa
+
+# devolve os números à página (a animação é feita aqui no navegador)
+cat("H", sua$horas, "\\n"); cat("N", sua$nota, "\\n")
+for (i in 1:6) cat(c("A", "B", "E", "P", "L", "U")[i], todas[i, ], "\\n")`;
+}
+
+function codigoR2() {
+  return `set.seed(${seed})
+pesquisa <- function(n, efeito, ruido) {
+  horas <- runif(n, 0, 15)
+  nota  <- 60 + efeito * (horas - 7.5) + rnorm(n, 0, ruido)
+  reta  <- lm(nota ~ horas)
+  c(coef(reta)["horas"], summary(reta)$coefficients["horas", "Pr(>|t|)"], confint(reta)["horas", ])
+}
+A <- pesquisa(n = 10000, efeito = 0.1, ruido = 10)   # muitos alunos, efeito minúsculo
+B <- pesquisa(n = 5, efeito = 2, ruido = 10)         # poucos alunos, efeito grande
+cat("A", A, "\\n"); cat("B", B, "\\n")`;
+}
+
+function atualizaPainel() {
+  document.querySelectorAll("#efs button").forEach(b => b.classList.toggle("ativo", parseFloat(b.dataset.v) === efeito));
+  document.querySelectorAll("#ns button").forEach(b => b.classList.toggle("ativo", parseInt(b.dataset.v) === n));
+  document.querySelectorAll("#rs button").forEach(b => b.classList.toggle("ativo", parseFloat(b.dataset.v) === ruido));
+  const se = seTeo(), pw = poderTeorico();
+  const lo = efeito - 1.96 * se, hi = efeito + 1.96 * se;
+  $("previsao").innerHTML = `<b>O que a teoria prevê:</b> cada pesquisa devolve uma inclinação diferente, porque entrevista ` +
+    `alunos diferentes. Com ${fmtInt(n)} alunos e um resto de ${ruido} pontos, as inclinações das ${K} pesquisas devem se espalhar ` +
+    `em torno de ${fmtEf(efeito)} com desvio-padrão de cerca de <b>${fmt(se)}</b>: esse número é o erro-padrão. ` +
+    `95 de cada 100 inclinações devem cair entre ${fmt(lo)} e ${fmt(hi)}. O intervalo de confiança de 95% que cada pesquisa calcula deve conter o ` +
+    `efeito verdadeiro em cerca de 95 de cada 100 pesquisas. ` +
+    (efeito === 0
+      ? `Como o efeito é zero, toda pesquisa que disser «há efeito» (p-valor menor que 0,05) estará errada; isso deve acontecer em cerca de ${Math.round(K * 0.05)} das ${K}.`
+      : `Cerca de <b>${pct(pw)}</b> das pesquisas devem dizer «há efeito» (p-valor menor que 0,05): é o poder do teste. As outras ${pct(1 - pw)} deixam passar um efeito que existe.`);
+  $("nota_sua").textContent = `O número está em pontos de nota por hora de estudo. O efeito verdadeiro é ${fmtEf(efeito)}.`;
+  $("nota_sd").textContent = `Este número é o desvio-padrão das inclinações das pesquisas feitas até agora. A teoria prevê que ele fique perto do erro-padrão, cerca de ${fmt(se)}.`;
+  $("nota_cob").textContent = `A teoria prevê cerca de 95 de cada 100 pesquisas.`;
+  $("lbl_sig").textContent = efeito === 0 ? `PESQUISAS QUE DISSERAM «HÁ EFEITO» (TODAS ERRADAS)` : `PESQUISAS QUE DISSERAM «HÁ EFEITO» (TODAS CERTAS)`;
+  $("nota_sig").textContent = efeito === 0
+    ? `Uma pesquisa diz «há efeito» quando o seu p-valor é menor que 0,05. A teoria prevê cerca de ${Math.round(K * 0.05)} das ${K}: é o erro que o teste aceita de antemão ao usar o corte de 0,05.`
+    : `Uma pesquisa diz «há efeito» quando o seu p-valor é menor que 0,05. A teoria prevê cerca de ${pct(pw)}: é o poder do teste.`;
+  $("formula").innerHTML = `<p>A reta ajustada é <span class="f">nota = a + b × horas</span>, e a inclinação estimada é <span class="f">b</span>.</p>` +
+    `<p>O erro-padrão de <span class="f">b</span> é <span class="f">ep(b) = s / √Σ(horasᵢ − média das horas)²</span>, em que <span class="f">s</span> é o ` +
+    `desvio-padrão dos resíduos, isto é, das diferenças entre a nota de cada aluno e a nota que a reta prevê para ele. Com horas espalhadas por igual entre 0 e 15, isso dá cerca de <span class="f">resto / (√n × 4,33)</span>, em que resto é o desvio-padrão escolhido no passo 3; ` +
+    `aqui, ${ruido} / (√${fmtInt(n)} × 4,33) = ${fmt(se)}.</p>` +
+    `<p>O intervalo de 95% é <span class="f">b ± t × ep(b)</span>, em que o multiplicador t fica perto de 2 (1,96 quando n é grande). A estatística t da pesquisa é ` +
+    `<span class="f">t = b / ep(b)</span>. O p-valor é a chance de uma pesquisa encontrar um t tão grande quanto esse, em módulo, se o efeito verdadeiro fosse zero. ` +
+    `O poder do teste, calculado pela aproximação normal, é <span class="f">Φ(efeito / ep − 1,96) + Φ(−efeito / ep − 1,96)</span> = ${pct(pw)}, em que Φ é a probabilidade acumulada da normal padrão.</p>`;
+  $("codigoview").textContent = codigoR();
+  $("codigoview2").textContent = codigoR2();
+}
+function atualizaVel() {
+  const seg = DURACAO / 1000 / fator;
+  $("vel_txt").textContent = `cerca de ${fmt(seg, seg < 10 && Math.abs(seg - Math.round(seg)) > 0.05 ? 1 : 0)} segundos para mostrar as ${K} pesquisas`;
+}
+function limpaCartoes() {
+  $("nota_sua").textContent = `O número está em pontos de nota por hora de estudo. O efeito verdadeiro é ${fmtEf(efeito)}.`;
+  $("res_sua").textContent = "—"; $("res_sd").textContent = "—"; $("res_cob").textContent = "—"; $("res_sig").textContent = "—";
+}
+// um controle mudou: limpa as pesquisas anteriores e mostra só a teoria nova
+function reinicia() {
+  pararQuadro();
+  dados = null;
+  limpaCartoes();
+  $("verifica").innerHTML = ""; $("aviso").textContent = "";
+  $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true; $("pausa").textContent = "Pausar";
+  estado = preparaEstado(); desenha(estado);
+}
+EFS.forEach(o => {
+  const b = document.createElement("button"); b.textContent = o.r; b.dataset.v = o.v; b.classList.add("texto");
+  b.addEventListener("click", () => { efeito = o.v; atualizaPainel(); reinicia(); });
+  $("efs").appendChild(b);
+});
+NS.forEach(v => {
+  const b = document.createElement("button"); b.textContent = fmtInt(v); b.dataset.v = v;
+  b.addEventListener("click", () => { n = v; atualizaPainel(); reinicia(); });
+  $("ns").appendChild(b);
+});
+RS.forEach(o => {
+  const b = document.createElement("button"); b.textContent = o.r; b.dataset.v = o.v; b.classList.add("texto");
+  b.addEventListener("click", () => { ruido = o.v; atualizaPainel(); reinicia(); });
+  $("rs").appendChild(b);
+});
+$("rodar").addEventListener("click", rodar);
+$("rodar2").addEventListener("click", rodar2);
+$("repetir").addEventListener("click", () => { if (dados) anima(); });
+$("passo").addEventListener("click", () => { if (dados) passoAPasso(); });
+$("pausa").addEventListener("click", pausar);
+$("vel").addEventListener("input", () => { fator = Math.pow(2, parseInt($("vel").value)); atualizaVel(); });
+window.addEventListener("resize", () => { if (estado) desenha(estado); desenhaDois(dois); });
+$("lista").addEventListener("toggle", () => { quadrosLista = 0; if (estado) atualizaLista(estado); });
+
+let webR, shelter;
+async function iniciar() {
+  const inicio = Date.now();
+  const relogio = setInterval(() => { $("rodar").textContent = `carregando o R… ${Math.round((Date.now() - inicio) / 1000)} s`; }, 1000);
+  try {
+    const { WebR } = await import("https://webr.r-wasm.org/latest/webr.mjs");
+    webR = new WebR(); await webR.init(); shelter = await new webR.Shelter();
+    clearInterval(relogio);
+    $("rodar").innerHTML = "&#9654; Rodar"; $("rodar").disabled = false;
+    $("rodar2").innerHTML = "&#9654; Rodar as duas pesquisas"; $("rodar2").disabled = false;
+  } catch (e) {
+    clearInterval(relogio);
+    $("rodar").textContent = "o R não carregou"; $("rodar2").textContent = "o R não carregou";
+    $("aviso").textContent = "O R não carregou: " + e.message + ". Verifique a conexão e recarregue a página.";
+  }
+}
+
+const leVetor = d => d.trim().split(/\s+/).slice(1).map(parseFloat);
+async function rodar() {
+  seed = Math.floor(Math.random() * 100000);
+  atualizaPainel();
+  $("rodar").disabled = true; $("rodar").textContent = "pesquisando…";
+  $("rodar2").disabled = true;
+  $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true;
+  $("aviso").textContent = "";
+  try {
+    const captura = await shelter.captureR(codigoR(), { withAutoprint: false, captureStreams: true, captureConditions: true });
+    const r = {};
+    for (const linha of captura.output) {
+      if (linha.type !== "stdout") continue;
+      const d = linha.data, c = d[0];
+      if (d[1] === " " && "HNABEPLU".includes(c)) r[c] = leVetor(d);
+    }
+    if (r.H && r.B && r.B.length === K) {
+      dados = { horas: r.H, nota: r.N, a: r.A, b: r.B, e: r.E, p: r.P, l: r.L, u: r.U };
+      escreveVerifica();
+      $("repetir").disabled = false; $("passo").disabled = false;
+      $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
+      anima();
+    } else {
+      $("aviso").textContent = "O R não devolveu os valores esperados.";
+    }
+  } catch (e) {
+    $("aviso").textContent = "Erro na execução: " + e.message;
+  } finally {
+    if (shelter) await shelter.purge();
+    $("rodar").innerHTML = "&#9654; Rodar"; $("rodar").disabled = false; $("rodar2").disabled = false;
+  }
+}
+
+function escreveVerifica() {
+  const se = seTeo(), pw = poderTeorico();
+  let s = 0, s2 = 0, cob = 0, sig = 0;
+  for (let i = 0; i < K; i++) {
+    const b = dados.b[i]; s += b; s2 += b * b;
+    if (dados.l[i] <= efeito && efeito <= dados.u[i]) cob++;
+    if (dados.p[i] < 0.05) sig++;
+  }
+  const m = s / K, sd = Math.sqrt(Math.max(0, (s2 - K * m * m) / (K - 1)));
+  const b1 = dados.b[0], l1 = dados.l[0], u1 = dados.u[0], p1 = dados.p[0];
+  const contem = l1 <= efeito && efeito <= u1;
+  $("verifica").innerHTML = `<b>Previsto e observado:</b> o erro-padrão previsto era ${fmt(se)}; as ${K} inclinações se espalharam com ` +
+    `desvio-padrão <b>${fmt(sd)}</b>. ${cob} dos ${K} intervalos contêm o efeito verdadeiro (previsto: cerca de ${Math.round(K * 0.95)}). ` +
+    `${sig} pesquisas disseram «há efeito» (previsto: cerca de ${efeito === 0 ? Math.round(K * 0.05) : Math.round(K * pw)}). ` +
+    `A sua pesquisa encontrou <b>${fmt(b1)}</b>, com intervalo de ${fmt(l1)} a ${fmt(u1)} e ${fmtP(p1)}: ` +
+    (contem ? `o intervalo contém o efeito verdadeiro, ${fmtEf(efeito)}.` : `o intervalo não contém o efeito verdadeiro, ${fmtEf(efeito)}; a sua é uma das poucas pesquisas em que o intervalo erra.`) +
+    ` <b>No gráfico de cima:</b> cada reta azul é o que uma pesquisa encontrou. Juntas, as retas formam um leque, que mostra quanto a inclinação muda ` + `de pesquisa para pesquisa; o erro-padrão mede a abertura desse leque. <b>No gráfico de baixo:</b> o histograma das inclinações se encaixa na curva ` +
+    `vermelha que a teoria desenhou antes de as pesquisas serem sorteadas; o traço azul é o intervalo da sua pesquisa.` +
+    (n <= 20 ? ` Com 20 alunos o leque é aberto: escolha 1.000 e rode de novo.` : ``);
+}
+
+// ---------- a animação: as pesquisas aparecendo uma a uma, na velocidade escolhida, com pausa ----------
+let quadro = null, estado = null, ultimo = 0;
+function preparaEstado() {
+  const se = seTeo();
+  const xa = efeito - 4.5 * se, xb = efeito + 4.5 * se, nb = 40;
+  return { k: 0, acum: 0, xa, xb, nb, largura: (xb - xa) / nb, contagens: new Int32Array(nb), soma: 0, soma2: 0, cob: 0, sig: 0 };
+}
+function avanca(st, ate) {
+  if (!dados) return;
+  for (; st.k < ate && st.k < K; st.k++) {
+    const b = dados.b[st.k];
+    st.soma += b; st.soma2 += b * b;
+    if (dados.l[st.k] <= efeito && efeito <= dados.u[st.k]) st.cob++;
+    if (dados.p[st.k] < 0.05) st.sig++;
+    const i = Math.floor((b - st.xa) / st.largura);
+    if (i >= 0 && i < st.nb) st.contagens[i]++;
+  }
+  // cartões ao vivo
+  if (st.k > 0) {
+    $("res_sua").textContent = fmt(dados.b[0]);
+    $("nota_sua").textContent = `O número está em pontos de nota por hora de estudo. O erro-padrão da sua pesquisa é ${fmt(dados.e[0])}, e o intervalo de 95% vai de ${fmt(dados.l[0])} a ${fmt(dados.u[0])}, com ${fmtP(dados.p[0])}. O efeito verdadeiro é ${fmtEf(efeito)}.`;
+    const m = st.soma / st.k;
+    const vr = st.k > 1 ? (st.soma2 - st.k * m * m) / (st.k - 1) : 0;
+    $("res_sd").textContent = st.k > 1 ? fmt(Math.sqrt(Math.max(0, vr))) : "—";
+    $("res_cob").textContent = `${st.cob} de ${st.k}`;
+    $("res_sig").textContent = `${st.sig} de ${st.k}`;
+  }
+}
+function ticksBonitos(a, b, alvo = 5) {
+  const bruto = (b - a) / alvo, pot = Math.pow(10, Math.floor(Math.log10(bruto)));
+  const m = bruto / pot, passo = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * pot;
+  const out = []; for (let t = Math.ceil(a / passo - 1e-9) * passo; t <= b + 1e-9; t += passo) out.push(Math.round(t / passo) * passo);
+  return out;
+}
+const FONTE = '-apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+function preparaCanvas(id, razao, minH = 0) {
+  const cv = $(id);
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 700, H = Math.max(minH, Math.round(W * razao));
+  if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  cv.style.height = H + "px";
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  return { g, W, H, fonte: Math.max(11, Math.round(W / 55)) };
+}
+// título e linha de leitura (que quebra quando não cabe); devolve o y onde o gráfico começa
+function quebra(g, texto, largura) {
+  const linhas = []; let atual = "";
+  for (const pal of texto.split(" ")) { const tent = atual ? atual + " " + pal : pal; if (g.measureText(tent).width > largura && atual) { linhas.push(atual); atual = pal; } else atual = tent; }
+  linhas.push(atual);
+  return linhas;
+}
+function cabecalho(c, titulo, leitura) {
+  const { g, W, fonte } = c;
+  g.fillStyle = "#1c2430"; g.textAlign = "center";
+  g.font = `bold ${fonte + 2}px ${FONTE}`;
+  const lt = quebra(g, titulo, W - 16);
+  lt.forEach((l, i) => g.fillText(l, W / 2, 22 + 17 * i));
+  let y = 22 + 17 * (lt.length - 1) + 18;
+  g.font = `${fonte}px ${FONTE}`; g.fillStyle = "#555";
+  const ll = quebra(g, leitura, W - 16);
+  ll.forEach((l, i) => g.fillText(l, W / 2, y + 15 * i));
+  return y + 15 * (ll.length - 1) + 12;
+}
+const AZUL = "#1a4f8b", AZULCLARO = "#4b6ea9", VERMELHO = "#d62828";
+function desenha(st) {
+  desenhaLeque(st);
+  desenhaHistograma(st);
+  atualizaLista(st);
+}
+function desenhaLeque(st) {
+  const c = preparaCanvas("anim1", 0.62, 270), { g, W, H, fonte } = c;
+  const y0 = cabecalho(c,
+    st.k === 0 ? `A verdade: cada hora de estudo vale ${pontos(efeito)} na nota` : `${st.k} de ${K} pesquisas: cada reta azul é a inclinação que uma pesquisa encontrou`,
+    st.k === 0 ? `A reta vermelha é a verdade. Aperte Rodar: a página faz a sua pesquisa e, depois, outras ${K - 1} iguais.`
+               : `Cada ponto é um dos ${fmtInt(n)} alunos da sua pesquisa. A reta azul escura é a da sua pesquisa, e a reta vermelha é a verdade.`);
+  const P = { x0: 40, x1: W - 14, y0, y1: H - 36 };
+  const ya = Math.max(0, 60 - 7.5 * efeito - 2.6 * ruido), yb = Math.min(100, 60 + 7.5 * efeito + 2.6 * ruido);
+  const sx = v => P.x0 + v / 15 * (P.x1 - P.x0);
+  const sy = v => P.y1 - (v - ya) / (yb - ya) * (P.y1 - P.y0);
+  g.save(); g.beginPath(); g.rect(P.x0, P.y0, P.x1 - P.x0, P.y1 - P.y0); g.clip();
+  // os alunos da sua pesquisa
+  if (st.k > 0) {
+    g.fillStyle = n >= 1000 ? "rgba(140,160,190,0.45)" : "rgba(120,145,180,0.7)";
+    const r = n >= 1000 ? 1.6 : n >= 100 ? 2.6 : 3.4;
+    for (let i = 0; i < n; i++) { g.beginPath(); g.arc(sx(dados.horas[i]), sy(dados.nota[i]), r, 0, 2 * Math.PI); g.fill(); }
+  }
+  // as outras pesquisas: o leque
+  const reta = (a, b, cor, lw, tracejado) => {
+    g.strokeStyle = cor; g.lineWidth = lw; g.setLineDash(tracejado ? [8, 5] : []);
+    g.beginPath(); g.moveTo(sx(0), sy(a)); g.lineTo(sx(15), sy(a + 15 * b)); g.stroke(); g.setLineDash([]);
+  };
+  if (st.k > 1) { const alfa = st.k > 100 ? 0.08 : 0.18; for (let i = 1; i < st.k; i++) reta(dados.a[i], dados.b[i], `rgba(75,110,169,${alfa})`, 1, false); }
+  // a verdade
+  reta(60 - 7.5 * efeito, efeito, VERMELHO, 2.5, true);
+  // a sua pesquisa
+  if (st.k > 0) reta(dados.a[0], dados.b[0], AZUL, 2.5, false);
+  g.restore();
+  // eixos
+  g.strokeStyle = "#333"; g.lineWidth = 1; g.beginPath(); g.moveTo(P.x0, P.y1); g.lineTo(P.x1, P.y1); g.moveTo(P.x0, P.y0); g.lineTo(P.x0, P.y1); g.stroke();
+  g.fillStyle = "#333"; g.font = `${fonte}px ${FONTE}`; g.textAlign = "center";
+  for (const t of [0, 5, 10, 15]) { g.beginPath(); g.moveTo(sx(t), P.y1); g.lineTo(sx(t), P.y1 + 4); g.stroke(); g.fillText(String(t), sx(t), P.y1 + fonte + 4); }
+  g.fillText("horas de estudo por semana", (P.x0 + P.x1) / 2, H - 6);
+  g.textAlign = "right";
+  for (const t of ticksBonitos(ya, yb, 4)) { if (t < ya || t > yb) continue; g.beginPath(); g.moveTo(P.x0 - 4, sy(t)); g.lineTo(P.x0, sy(t)); g.stroke(); g.fillText(String(Math.round(t)), P.x0 - 6, sy(t) + 4); }
+  g.textAlign = "left"; g.fillText("nota", P.x0 + 4, P.y0 + fonte);
+}
+function desenhaHistograma(st) {
+  const c = preparaCanvas("anim2", 0.5, 230), { g, W, H, fonte } = c;
+  const se = seTeo();
+  const y0 = cabecalho(c,
+    st.k === 0 ? `Onde a teoria diz que as inclinações das ${K} pesquisas vão cair` : `As inclinações das ${st.k} pesquisas feitas até agora`,
+    st.k === 0 ? `A curva vermelha é a previsão. A linha vermelha tracejada, na vertical, marca o efeito verdadeiro, ${fmtEf(efeito)}.`
+               : `Cada barra conta quantas pesquisas acharam uma inclinação naquela faixa. A curva vermelha é a previsão, e o traço azul é o intervalo de 95% da sua pesquisa. O ponto vermelho na base marca a última pesquisa feita.`);
+  const P = { x0: 14, x1: W - 14, y0, y1: H - 36 };
+  const sx = v => P.x0 + (v - st.xa) / (st.xb - st.xa) * (P.x1 - P.x0);
+  // a curva teórica, em número de pesquisas por barra
+  const dens = x => K * st.largura * Math.exp(-0.5 * ((x - efeito) / se) ** 2) / (se * Math.sqrt(2 * Math.PI));
+  let ymax = dens(efeito) * 1.3;
+  for (let i = 0; i < st.nb; i++) if (st.contagens[i] > ymax) ymax = st.contagens[i];
+  const sy = v => P.y1 - v / ymax * (P.y1 - P.y0 - 14);
+  // barras
+  g.fillStyle = AZULCLARO;
+  for (let i = 0; i < st.nb; i++) {
+    const cnt = st.contagens[i]; if (!cnt) continue;
+    const l = st.xa + i * st.largura;
+    g.fillRect(sx(l), sy(cnt), Math.max(1, sx(l + st.largura) - sx(l) - 1), P.y1 - sy(cnt));
+  }
+  // curva
+  g.strokeStyle = VERMELHO; g.lineWidth = 2.5; g.beginPath();
+  for (let i = 0; i <= 160; i++) { const x = st.xa + (st.xb - st.xa) * i / 160; const y = sy(dens(x)); if (i === 0) g.moveTo(sx(x), y); else g.lineTo(sx(x), y); }
+  g.stroke();
+  // o efeito verdadeiro
+  g.setLineDash([6, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(sx(efeito), P.y0); g.lineTo(sx(efeito), P.y1); g.stroke(); g.setLineDash([]);
+  // o intervalo da sua pesquisa
+  if (st.k > 0) {
+    const l = Math.max(st.xa, dados.l[0]), u = Math.min(st.xb, dados.u[0]), y = P.y1 - 7;
+    g.strokeStyle = AZUL; g.lineWidth = 3; g.beginPath(); g.moveTo(sx(l), y); g.lineTo(sx(u), y); g.stroke();
+    g.fillStyle = AZUL; g.beginPath(); g.arc(sx(dados.b[0]), y, 4.5, 0, 2 * Math.PI); g.fill();
+    // a última pesquisa
+    const b = dados.b[st.k - 1];
+    if (b >= st.xa && b <= st.xb) { g.fillStyle = VERMELHO; g.beginPath(); g.arc(sx(b), P.y1 - 3, 3.5, 0, 2 * Math.PI); g.fill(); }
+  }
+  // eixo
+  g.strokeStyle = "#333"; g.lineWidth = 1; g.beginPath(); g.moveTo(P.x0, P.y1); g.lineTo(P.x1, P.y1); g.stroke();
+  g.fillStyle = "#333"; g.font = `${fonte}px ${FONTE}`; g.textAlign = "center";
+  for (const t of ticksBonitos(st.xa, st.xb, 6)) { if (t < st.xa || t > st.xb) continue; g.beginPath(); g.moveTo(sx(t), P.y1); g.lineTo(sx(t), P.y1 + 4); g.stroke(); g.fillText(fmt(t, se < 0.05 ? 2 : 1), sx(t), P.y1 + fonte + 4); }
+  g.fillText("inclinação encontrada (pontos de nota por hora de estudo)", (P.x0 + P.x1) / 2, H - 6);
+}
+let quadrosLista = 0;
+function atualizaLista(st) {
+  if (!$("lista").open) return;
+  if (st.k > 0 && st.k < K && (++quadrosLista % 6) !== 0) return;   // durante a animação, atualiza a cada 6 quadros
+  if (!dados || st.k === 0) { $("lista_txt").textContent = "Nenhuma pesquisa foi feita ainda. Aperte Rodar para começar."; return; }
+  const linhas = [];
+  for (let i = 0; i < st.k; i++) {
+    linhas.push(`${i + 1}${i === 0 ? " (a sua)" : ""}: inclinação ${fmt(dados.b[i])} · intervalo de ${fmt(dados.l[i])} a ${fmt(dados.u[i])} · ${fmtP(dados.p[i])}` +
+      (dados.p[i] < 0.05 ? " · «há efeito»" : ""));
+  }
+  $("lista_txt").textContent = `${st.k < K ? `As ${st.k} pesquisas feitas até agora` : `As ${K} pesquisas`} (pontos de nota por hora de estudo):\n` + linhas.join("\n");
+}
+function pararQuadro() { if (quadro) { cancelAnimationFrame(quadro); quadro = null; } }
+function velocidade() { return K / DURACAO * 1000 * fator; }   // pesquisas por segundo
+function anima() {
+  pararQuadro();
+  estado = preparaEstado();
+  limpaCartoes();
+  desenha(estado);
+  continuar();
+}
+function continuar() {
+  ultimo = performance.now();
+  $("pausa").textContent = "Pausar"; $("pausa").disabled = false;
+  quadro = requestAnimationFrame(quadroSeguinte);
+}
+function quadroSeguinte(agora) {
+  const dt = Math.min(0.25, (agora - ultimo) / 1000); ultimo = agora;
+  estado.acum = Math.min(K, estado.acum + dt * velocidade());
+  const ate = Math.floor(estado.acum);
+  if (ate > estado.k) { avanca(estado, ate); desenha(estado); }
+  if (estado.k < K) quadro = requestAnimationFrame(quadroSeguinte);
+  else { quadro = null; $("pausa").disabled = true; }
+}
+function pausar() {
+  if (quadro) { pararQuadro(); $("pausa").textContent = "Continuar"; }
+  else if (estado && dados && estado.k < K) continuar();
+}
+function passoAPasso() {
+  if (!estado || estado.k >= K) { pararQuadro(); estado = preparaEstado(); limpaCartoes(); }
+  if (quadro) { pararQuadro(); $("pausa").textContent = "Continuar"; }
+  avanca(estado, estado.k + 1); estado.acum = estado.k; desenha(estado);
+  $("pausa").disabled = estado.k >= K; if (estado.k < K) $("pausa").textContent = "Continuar";
+}
+
+// ---------- parte 4: as duas pesquisas ----------
+let dois = null;
+async function rodar2() {
+  seed = Math.floor(Math.random() * 100000);
+  $("codigoview2").textContent = codigoR2();
+  $("rodar2").disabled = true; $("rodar2").textContent = "pesquisando…"; $("rodar").disabled = true;
+  $("aviso2").textContent = "";
+  try {
+    const captura = await shelter.captureR(codigoR2(), { withAutoprint: false, captureStreams: true, captureConditions: true });
+    const r = {};
+    for (const linha of captura.output) {
+      if (linha.type !== "stdout") continue;
+      const d = linha.data;
+      if (d.startsWith("A ")) r.A = leVetor(d); else if (d.startsWith("B ")) r.B = leVetor(d);
+    }
+    if (r.A && r.B) {
+      const A = { b: r.A[0], p: r.A[1], l: r.A[2], u: r.A[3], ef: 0.1 }, B = { b: r.B[0], p: r.B[1], l: r.B[2], u: r.B[3], ef: 2 };
+      dois = { A, B };
+      const diz = x => x.p < 0.05 ? "«há efeito»" : "«não dá para afirmar que há efeito»";
+      $("res_a").textContent = fmt(A.b);
+      $("nota_a").textContent = `O número está em pontos de nota por hora de estudo. O intervalo de 95% vai de ${fmt(A.l)} a ${fmt(A.u)}, com ${fmtP(A.p)}. A pesquisa diz: ${diz(A)}.`;
+      $("res_b").textContent = fmt(B.b);
+      $("nota_b").textContent = `O número está em pontos de nota por hora de estudo. O intervalo de 95% vai de ${fmt(B.l)} a ${fmt(B.u)}, com ${fmtP(B.p)}. A pesquisa diz: ${diz(B)}.`;
+      $("verifica2").innerHTML = `<b>O que aconteceu:</b> o número da pesquisa A é preciso e pequeno. O intervalo vai de ${fmt(A.l)} a ${fmt(A.u)}` +
+        (A.p < 0.05 ? `, todo longe de zero, e por isso ela diz «há efeito» (${fmtP(A.p)}). Mas o efeito é de um ponto a cada 10 horas de estudo.`
+                    : `; desta vez ele encostou no zero (${fmtP(A.p)}), o que é raro com 10.000 alunos. Aperte o botão de novo para sortear outras duas pesquisas.`) +
+        ` O número da pesquisa B é grande e impreciso. O intervalo vai de ${fmt(B.l)} a ${fmt(B.u)}` +
+        (B.p < 0.05 ? `; desta vez ele ficou todo de um lado do zero, mas é largo demais para dizer quanto vale uma hora de estudo.`
+                    : `: cabe zero nele, e a pesquisa não consegue afirmar que há efeito (${fmtP(B.p)}), embora o efeito verdadeiro seja 20 vezes o da pesquisa A.`) +
+        ` <b>«Significativo»</b> quer dizer que o intervalo não contém zero. A palavra fala da precisão do número e não diz nada sobre o tamanho do efeito.`;
+      desenhaDois(dois);
+      $("resultado2").scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      $("aviso2").textContent = "O R não devolveu os valores esperados.";
+    }
+  } catch (e) {
+    $("aviso2").textContent = "Erro na execução: " + e.message;
+  } finally {
+    if (shelter) await shelter.purge();
+    $("rodar2").innerHTML = "&#9654; Rodar as duas pesquisas"; $("rodar2").disabled = false; $("rodar").disabled = false;
+  }
+}
+function desenhaDois(d) {
+  const c = preparaCanvas("anim3", 0.36, 210), { g, W, H, fonte } = c;
+  const antes = !d;
+  if (antes) d = { A: { ef: 0.1 }, B: { ef: 2 } };
+  const y0 = cabecalho(c, antes ? "Os dois efeitos verdadeiros na mesma escala" : "Os dois intervalos de 95% na mesma escala",
+    antes ? "O traço vermelho marca o efeito verdadeiro de cada mundo. Aperte o botão, e cada pesquisa devolve um número e um intervalo."
+          : "O traço vermelho marca o efeito verdadeiro de cada mundo. O ponto azul é o que a pesquisa encontrou, e a barra azul é o seu intervalo de 95%.");
+  const xa = antes ? -1 : Math.min(-1, Math.floor(d.B.l) - 0.5), xb = antes ? 4 : Math.max(4, Math.ceil(d.B.u) + 0.5);
+  const P = { x0: 92, x1: W - 14, y0, y1: H - 34 };
+  const sx = v => P.x0 + (v - xa) / (xb - xa) * (P.x1 - P.x0);
+  const yA = P.y0 + (P.y1 - P.y0) * 0.3, yB = P.y0 + (P.y1 - P.y0) * 0.72;
+  // o zero
+  g.strokeStyle = "#999"; g.lineWidth = 1; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(sx(0), P.y0); g.lineTo(sx(0), P.y1); g.stroke(); g.setLineDash([]);
+  g.font = `${fonte}px ${FONTE}`;
+  for (const [x, y, nome] of [[d.A, yA, "Pesquisa A"], [d.B, yB, "Pesquisa B"]]) {
+    g.fillStyle = "#1c2430"; g.textAlign = "right"; g.fillText(nome, P.x0 - 8, y + 4);
+    g.strokeStyle = VERMELHO; g.lineWidth = 2.5; g.beginPath(); g.moveTo(sx(x.ef), y - 12); g.lineTo(sx(x.ef), y + 12); g.stroke();
+    if (antes) continue;
+    g.strokeStyle = AZUL; g.lineWidth = 4; g.beginPath(); g.moveTo(sx(Math.max(xa, x.l)), y); g.lineTo(sx(Math.min(xb, x.u)), y); g.stroke();
+    g.fillStyle = AZUL; g.beginPath(); g.arc(sx(x.b), y, 5, 0, 2 * Math.PI); g.fill();
+  }
+  g.strokeStyle = "#333"; g.lineWidth = 1; g.beginPath(); g.moveTo(P.x0, P.y1); g.lineTo(P.x1, P.y1); g.stroke();
+  g.fillStyle = "#333"; g.textAlign = "center";
+  for (const t of ticksBonitos(xa, xb, 6)) { if (t < xa || t > xb) continue; g.beginPath(); g.moveTo(sx(t), P.y1); g.lineTo(sx(t), P.y1 + 4); g.stroke(); g.fillText(fmt(t, 0), sx(t), P.y1 + fonte + 4); }
+  g.fillText("pontos de nota por hora de estudo", (P.x0 + P.x1) / 2, H - 6);
+}
+
+atualizaPainel();
+atualizaVel();
+estado = preparaEstado(); desenha(estado);
+desenhaDois(null);
+iniciar();
+</script>
+</body>
+</html>
