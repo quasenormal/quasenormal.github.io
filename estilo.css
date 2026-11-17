@@ -29,8 +29,8 @@ hr{border:0;border-top:1px solid var(--rule);margin:2.6rem 0 0}
 .item:last-child{border-bottom:0}
 .item .tit{font-weight:700}
 .item .desc{font-size:.95rem;color:#3a3a3a;margin:.25rem 0 .4rem}
-.item .baixar{font-size:.85rem;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.item .tit a{color:var(--link);text-decoration:none}
+.item .tit a:hover{color:var(--link-hover);text-decoration:underline}
 .secao-nota{font-size:.9rem;color:var(--muted);margin:-.3rem 0 1rem}
 table.datas{border-collapse:collapse;font-size:.95rem;margin:.6rem 0}
 table.datas td{padding:.3rem 1.4rem .3rem 0;border-bottom:1px solid var(--rule)}
