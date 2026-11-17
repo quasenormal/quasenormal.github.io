@@ -43,7 +43,9 @@
   #rodar:disabled { background: #9fb3cb; cursor: wait; }
   .botoes button.sec { background: #fff; color: var(--azul); border: 1px solid var(--azul); padding: 10px 16px; }
   .botoes button.sec:disabled { color: #8a93a0; border-color: var(--borda); cursor: default; }
-  #resultado.desatualizado { opacity: .45; }
+  .veloc { font-size: .92rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 2px 0 8px; }
+  .veloc input { width: 170px; }
+  .veloc span { color: #5a6573; }
   #aviso { font-size: .9rem; color: var(--verm); font-weight: 600; margin: 6px 0; min-height: 1.2em; }
   .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
   .card { border: 2px solid var(--borda); border-radius: 10px; padding: 10px 12px; }
@@ -56,6 +58,10 @@
   #anim { width: 100%; height: auto; border: 1px solid var(--borda); border-radius: 10px;
           margin-top: 12px; background: #fff; display: block; }
   .escondido { display: none !important; }
+  .lista { margin-top: 6px; font-size: .88rem; }
+  .lista summary { cursor: pointer; color: var(--azul); text-align: right; }
+  .lista pre { max-height: 200px; overflow: auto; background: var(--cinza); color: #1c2430; border: 1px solid var(--borda);
+               border-radius: 8px; padding: 8px 10px; font-size: .82rem; white-space: pre-wrap; margin-top: 6px; }
   details { margin-top: 12px; font-size: .88rem; }
   details pre { background: #10151c; color: #d7e3f0; border-radius: 10px; padding: 12px;
                 font-size: .8rem; overflow-x: auto; white-space: pre-wrap; }
@@ -85,8 +91,10 @@
   valores um a um e vê o histograma tomar o formato que a teoria desenhou.</p>
 </div>
 
-<p class="nota">O R (o programa de estatística que faz os sorteios) sorteia <b>n</b> valores da
-distribuição escolhida, um a um, e a página vai montando o histograma. Em vermelho fica a distribuição teórica: a chance de cada valor sair.</p>
+<p class="nota">Em vermelho, no gráfico abaixo, está a distribuição teórica: a chance que a teoria dá a cada
+valor, com os parâmetros que você escolheu. Mude um parâmetro e o vermelho muda na hora. Quando você
+aperta Rodar, o R (o programa de estatística que faz os sorteios) sorteia os <b>n</b> valores que você
+escolheu, um a um, e as barras azuis (a frequência observada) vão se aproximando do vermelho.</p>
 
 <h2>1. Escolha a distribuição</h2>
 <div class="cenarios" id="cenarios"></div>
@@ -102,9 +110,12 @@ distribuição escolhida, um a um, e a página vai montando o histograma. Em ver
 
 <div class="botoes">
   <button id="rodar" disabled>carregando o R…</button>
+  <button id="pausa" class="sec" disabled>Pausar</button>
   <button id="passo" class="sec" disabled>Um valor de cada vez</button>
-  <button id="repetir" class="sec" disabled>Repetir</button>
+  <button id="repetir" class="sec" disabled>Rever o sorteio</button>
 </div>
+<div class="veloc"><label for="vel">Velocidade do sorteio:</label>
+  <input type="range" id="vel" min="-2" max="2" step="1" value="0"> <span id="vel_txt"></span></div>
 <div id="aviso"></div>
 
 <div id="resultado">
@@ -117,7 +128,8 @@ distribuição escolhida, um a um, e a página vai montando o histograma. Em ver
       <p class="nota" id="nota_dp"></p></div>
   </div>
   <div id="verifica"></div>
-  <canvas id="anim" class="escondido"></canvas>
+  <canvas id="anim"></canvas>
+  <details class="lista" id="lista"><summary>Ver a lista dos valores sorteados</summary><pre id="lista_txt"></pre></details>
 </div>
 
 <details class="eq"><summary>Para quem quer a fórmula</summary><div id="formula"></div></details>
@@ -156,56 +168,69 @@ distribuição escolhida, um a um, e a página vai montando o histograma. Em ver
 const $ = id => document.getElementById(id);
 const fmt = (x, d = 2) => (x === null || x === undefined || Number.isNaN(x)) ? "—" : x.toFixed(d).replace(".", ",");
 const fmtInt = k => k.toLocaleString("pt-BR");
+const linspace = (a, b, k) => Array.from({ length: k }, (_, i) => a + (b - a) * i / (k - 1));
+function dbinom(N, p) {
+  const lfs = [0]; for (let i = 1; i <= N; i++) lfs.push(lfs[i - 1] + Math.log(i));
+  const x = [], pr = [];
+  for (let k = 0; k <= N; k++) { x.push(k); pr.push(Math.exp(lfs[N] - lfs[k] - lfs[N - k] + k * Math.log(p) + (N - k) * Math.log(1 - p))); }
+  return { x, p: pr };
+}
+function dpois(l) {
+  const x = [], pr = []; let pk = Math.exp(-l), acum = 0;
+  for (let k = 0; acum < 0.9995 && k < 1000; k++) { if (k > 0) pk *= l / k; x.push(k); pr.push(pk); acum += pk; }
+  return { x, p: pr };
+}
 
-// Cada distribuição: descrição, parâmetros (grupos de botões), gerador e densidade em R,
-// média e desvio-padrão teóricos, faixa do eixo e a fórmula para a dobra.
+// Cada distribuição: descrição, parâmetros (grupos de botões), gerador em R, a distribuição teórica
+// (calculada aqui na página, para aparecer antes de sortear), média e desvio-padrão, faixa do eixo e fórmula.
 const DISTS = [
   { id: "bern", nome: "Bernoulli", discreta: true,
     desc: "Só dois valores podem sair: 1, com probabilidade p, e 0, com probabilidade 1 − p. Exemplo: um eleitor sorteado vota no candidato (1) ou não vota (0).",
     params: [{ id: "p", rotulo: "p, a probabilidade de sair 1:", valores: [0.1, 0.2, 0.5, 0.8], inicial: 0.2, r: v => fmt(v, 1) }],
-    gera: v => `rbinom(n, 1, ${v.p})`, teoria: v => `valores <- 0:1; prob <- dbinom(valores, 1, ${v.p})`,
+    gera: v => `rbinom(n, 1, ${v.p})`, teoria: v => ({ x: [0, 1], p: [1 - v.p, v.p] }),
     media: v => v.p, dp: v => Math.sqrt(v.p * (1 - v.p)), faixa: () => [0, 1],
     formula: v => `<p>Probabilidade: <span class="f">P(X = 1) = p</span> e <span class="f">P(X = 0) = 1 − p</span>.</p><p>Média: <span class="f">p</span>. Variância (o desvio-padrão ao quadrado): <span class="f">p(1 − p)</span>; o desvio-padrão é a raiz dela: √(${fmt(v.p, 1)} × ${fmt(1 - v.p, 1)}) = ${fmt(Math.sqrt(v.p * (1 - v.p)), 3)}.</p>` },
   { id: "binom", nome: "Binomial", discreta: true,
     desc: "Conta quantos sucessos saem em N tentativas que não influenciam umas às outras, cada uma com probabilidade p de sucesso. Exemplo: quantas pessoas, entre 30 entrevistadas, dizem que votam no candidato.",
     params: [{ id: "N", rotulo: "N, o número de tentativas:", valores: [5, 30, 100], inicial: 30, r: v => String(v) },
              { id: "p", rotulo: "p, a probabilidade de sucesso em cada tentativa:", valores: [0.1, 0.5, 0.9], inicial: 0.5, r: v => fmt(v, 1) }],
-    gera: v => `rbinom(n, ${v.N}, ${v.p})`, teoria: v => `valores <- 0:${v.N}; prob <- dbinom(valores, ${v.N}, ${v.p})`,
+    gera: v => `rbinom(n, ${v.N}, ${v.p})`, teoria: v => dbinom(v.N, v.p),
     media: v => v.N * v.p, dp: v => Math.sqrt(v.N * v.p * (1 - v.p)), faixa: v => [0, v.N],
     formula: v => `<p>Probabilidade de k sucessos: <span class="f">P(X = k) = C(N, k) · p^k · (1 − p)^(N − k)</span>.</p><p>Média: <span class="f">N × p</span> = ${v.N} × ${fmt(v.p, 1)} = ${fmt(v.N * v.p, 1)}. Variância (o desvio-padrão ao quadrado): <span class="f">N × p × (1 − p)</span>; desvio-padrão: √(${v.N} × ${fmt(v.p, 1)} × ${fmt(1 - v.p, 1)}) = ${fmt(Math.sqrt(v.N * v.p * (1 - v.p)), 2)}.</p>` },
   { id: "pois", nome: "Poisson", discreta: true,
     desc: "Conta quantas vezes algo acontece num intervalo de tempo, quando um acontecimento não influencia o outro e ocorrem, em média, λ por intervalo. Exemplo: quantos clientes chegam numa hora, com λ clientes por hora em média.",
     params: [{ id: "l", rotulo: "λ, a média de acontecimentos no intervalo:", valores: [1, 4, 20], inicial: 4, r: v => String(v) }],
-    gera: v => `rpois(n, ${v.l})`, teoria: v => `valores <- 0:qpois(0.9995, ${v.l}); prob <- dpois(valores, ${v.l})`,
+    gera: v => `rpois(n, ${v.l})`, teoria: v => dpois(v.l),
     media: v => v.l, dp: v => Math.sqrt(v.l), faixa: v => [0, Math.ceil(v.l + 4 * Math.sqrt(v.l) + 1)],
     formula: v => `<p>Probabilidade de k acontecimentos: <span class="f">P(X = k) = e^(−λ) · λ^k / k!</span>.</p><p>Média: <span class="f">λ</span> = ${v.l}. Variância (o desvio-padrão ao quadrado): <span class="f">λ</span> também; desvio-padrão: √${v.l} = ${fmt(Math.sqrt(v.l), 2)}.</p>` },
   { id: "unif", nome: "Uniforme", discreta: false,
     desc: "Qualquer valor entre 0 e L pode sair, todos com a mesma chance. Exemplo: o minuto em que o ônibus passa, quando ele passa a cada L minutos sem horário fixo.",
     params: [{ id: "L", rotulo: "L, o maior valor possível (o menor é 0):", valores: [1, 10], inicial: 10, r: v => String(v) }],
-    gera: v => `runif(n, 0, ${v.L})`, teoria: v => `valores <- seq(0, ${v.L}, length.out = 200); prob <- dunif(valores, 0, ${v.L})`,
+    gera: v => `runif(n, 0, ${v.L})`, teoria: v => { const x = linspace(0, v.L, 200); return { x, p: x.map(() => 1 / v.L) }; },
     media: v => v.L / 2, dp: v => v.L / Math.sqrt(12), faixa: v => [0, v.L],
     formula: v => `<p>Densidade (a altura da curva vermelha em cada ponto): <span class="f">f(x) = 1 / L</span> para x entre 0 e L.</p><p>Média: <span class="f">L / 2</span> = ${fmt(v.L / 2, 1)}. Variância (o desvio-padrão ao quadrado): <span class="f">L² / 12</span>; desvio-padrão: ${v.L} / √12 = ${fmt(v.L / Math.sqrt(12), 2)}.</p>` },
   { id: "exp", nome: "Exponencial", discreta: false,
     desc: "Mede o tempo de espera até o próximo acontecimento, quando os acontecimentos ocorrem ao acaso e a espera dura, em média, m. Exemplo: minutos até o próximo cliente entrar, com m minutos em média.",
     params: [{ id: "m", rotulo: "m, o tempo médio de espera:", valores: [1, 5], inicial: 1, r: v => String(v) }],
-    gera: v => `rexp(n, 1 / ${v.m})`, teoria: v => `valores <- seq(0, ${6 * v.m}, length.out = 200); prob <- dexp(valores, 1 / ${v.m})`,
+    gera: v => `rexp(n, 1 / ${v.m})`, teoria: v => { const x = linspace(0, 6 * v.m, 200); return { x, p: x.map(t => Math.exp(-t / v.m) / v.m) }; },
     media: v => v.m, dp: v => v.m, faixa: v => [0, 6 * v.m],
     formula: v => `<p>Densidade (a altura da curva vermelha em cada ponto): <span class="f">f(x) = (1 / m) · e^(−x / m)</span> para x ≥ 0.</p><p>Média: <span class="f">m</span> = ${v.m}. Desvio-padrão: também <span class="f">m</span> = ${v.m}.</p>` },
   { id: "norm", nome: "Normal", discreta: false,
     desc: "A curva em forma de sino: os valores se acumulam em torno de μ, com espalhamento σ, tão frequentes acima quanto abaixo. Exemplo: a nota de um aluno sorteado numa prova.",
     params: [{ id: "mu", rotulo: "μ, o centro:", valores: [0, 100], inicial: 100, r: v => String(v) },
              { id: "s", rotulo: "σ, o espalhamento:", valores: [1, 3, 15], inicial: 15, r: v => String(v) }],
-    gera: v => `rnorm(n, ${v.mu}, ${v.s})`, teoria: v => `valores <- seq(${v.mu} - 4 * ${v.s}, ${v.mu} + 4 * ${v.s}, length.out = 200); prob <- dnorm(valores, ${v.mu}, ${v.s})`,
+    gera: v => `rnorm(n, ${v.mu}, ${v.s})`, teoria: v => { const x = linspace(v.mu - 4 * v.s, v.mu + 4 * v.s, 200); return { x, p: x.map(t => Math.exp(-0.5 * ((t - v.mu) / v.s) ** 2) / (v.s * Math.sqrt(2 * Math.PI))) }; },
     media: v => v.mu, dp: v => v.s, faixa: v => [v.mu - 4 * v.s, v.mu + 4 * v.s],
     formula: v => `<p>Densidade (a altura da curva vermelha em cada ponto): <span class="f">f(x) = (1 / (σ√(2π))) · e^(−(x − μ)² / (2σ²))</span>.</p><p>Média: <span class="f">μ</span> = ${v.mu}. Desvio-padrão: <span class="f">σ</span> = ${v.s}.</p>` },
 ];
 const NS = [10, 100, 1000, 10000];
+const DURACAO = { 10: 3000, 100: 5000, 1000: 7000, 10000: 10000 };   // ms do sorteio inteiro, na velocidade normal
 
 let dist = DISTS[0];
 let valores = {};
 let n = 1000;
+let fator = 1;                       // velocidade da animação: 0,25 a 4 vezes a normal
 let seed = Math.floor(Math.random() * 100000);
-let rodou = false;
 let dados = null, teoria = null;
 
 function codigoR() {
@@ -213,12 +238,7 @@ function codigoR() {
 n <- ${n}
 x <- ${dist.gera(valores)}      # os n valores sorteados, um a um
 cat("RES", mean(x), sd(x), "\\n")
-cat("X", x, "\\n")
-
-# a distribuicao teorica: ${dist.discreta ? "a probabilidade de cada valor" : "a densidade ao longo do eixo"}
-${dist.teoria(valores)}
-cat("T", valores, "\\n")
-cat("P", prob, "\\n")`;
+cat("X", x, "\\n")`;
 }
 
 function montaDist(d) {
@@ -235,16 +255,17 @@ function montaDist(d) {
       b.addEventListener("click", () => {
         valores[pr.id] = v;
         g.querySelectorAll("button").forEach(x => x.classList.toggle("ativo", x.dataset.v === String(v)));
-        atualizaPainel(); marcaDesatualizado();
+        atualizaPainel(); reinicia();
       });
       g.appendChild(b);
     });
     c.appendChild(g);
   });
-  atualizaPainel(); marcaDesatualizado();
+  atualizaPainel(); reinicia();
 }
 function atualizaPainel() {
   document.querySelectorAll("#ns button").forEach(b => b.classList.toggle("ativo", parseInt(b.dataset.v) === n));
+  teoria = dist.teoria(valores);
   const m = dist.media(valores), s = dist.dp(valores);
   $("previsao").innerHTML = `<b>O que a teoria prevê:</b> média <b>${fmt(m)}</b> e desvio-padrão <b>${fmt(s)}</b>, calculados ` +
     `antes de sortear. Conforme os sorteios se acumulam, o histograma se aproxima da distribuição teórica, e a média e o ` +
@@ -253,11 +274,20 @@ function atualizaPainel() {
   $("nota_dp").textContent = `Previsto: ${fmt(s)}.`;
   $("formula").innerHTML = dist.formula(valores);
   $("codigoview").textContent = codigoR();
+  atualizaVel();
 }
-function marcaDesatualizado() {
-  if (!rodou) return;
-  $("resultado").classList.add("desatualizado");
-  $("aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o resultado novo.";
+function atualizaVel() {
+  const seg = DURACAO[n] / 1000 / fator;
+  $("vel_txt").textContent = `cerca de ${fmt(seg, seg < 10 && Math.abs(seg - Math.round(seg)) > 0.05 ? 1 : 0)} segundos para sortear os ${fmtInt(n)} valores`;
+}
+// um controle mudou: limpa o sorteio anterior e mostra só a teoria nova
+function reinicia() {
+  pararQuadro();
+  dados = null;
+  $("res_media").textContent = "—"; $("res_dp").textContent = "—";
+  $("verifica").innerHTML = ""; $("aviso").textContent = "";
+  $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true; $("pausa").textContent = "Pausar";
+  estado = preparaEstado(); desenha(estado);
 }
 DISTS.forEach((d, i) => {
   const b = document.createElement("button"); b.dataset.id = d.id;
@@ -267,12 +297,16 @@ DISTS.forEach((d, i) => {
 });
 NS.forEach(v => {
   const b = document.createElement("button"); b.textContent = fmtInt(v); b.dataset.v = v;
-  b.addEventListener("click", () => { n = v; atualizaPainel(); marcaDesatualizado(); });
+  b.addEventListener("click", () => { n = v; atualizaPainel(); reinicia(); });
   $("ns").appendChild(b);
 });
 $("rodar").addEventListener("click", rodar);
-$("repetir").addEventListener("click", () => { if (dados) anima(false); });
+$("repetir").addEventListener("click", () => { if (dados) anima(); });
 $("passo").addEventListener("click", () => { if (dados) passoAPasso(); });
+$("pausa").addEventListener("click", pausar);
+$("vel").addEventListener("input", () => { fator = Math.pow(2, parseInt($("vel").value)); atualizaVel(); });
+window.addEventListener("resize", () => { if (estado) desenha(estado); });
+$("lista").addEventListener("toggle", () => { quadrosLista = 0; if (estado) atualizaLista(estado); });
 
 let webR, shelter;
 async function iniciar() {
@@ -294,32 +328,27 @@ async function rodar() {
   seed = Math.floor(Math.random() * 100000);
   atualizaPainel();
   $("rodar").disabled = true; $("rodar").textContent = "sorteando…";
-  $("repetir").disabled = true; $("passo").disabled = true;
-  $("aviso").textContent = ""; $("resultado").classList.remove("desatualizado");
+  $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true;
+  $("aviso").textContent = "";
   try {
     const captura = await shelter.captureR(codigoR(), { withAutoprint: false, captureStreams: true, captureConditions: true });
-    let res = null; dados = null; let tx = null, tp = null;
+    let res = null; dados = null;
     for (const linha of captura.output) {
       if (linha.type !== "stdout") continue;
       const d = linha.data;
       if (d.startsWith("RES")) { const p = d.trim().split(/\s+/); res = { media: parseFloat(p[1]), sd: parseFloat(p[2]) }; }
       else if (d.startsWith("X ")) dados = d.trim().split(/\s+/).slice(1).map(parseFloat);
-      else if (d.startsWith("T ")) tx = d.trim().split(/\s+/).slice(1).map(parseFloat);
-      else if (d.startsWith("P ")) tp = d.trim().split(/\s+/).slice(1).map(parseFloat);
     }
-    if (res && dados && tx && tp) {
-      teoria = { x: tx, p: tp };
+    if (res && dados) {
       const m = dist.media(valores), s = dist.dp(valores);
       $("verifica").innerHTML = `<b>Previsto e observado:</b> a teoria previa média ${fmt(m)} e desvio-padrão ${fmt(s)}. Nos ` +
         `${fmtInt(n)} valores sorteados, a média saiu <b>${fmt(res.media)}</b> e o desvio-padrão saiu <b>${fmt(res.sd)}</b>. <b>No gráfico:</b> as barras azuis ` +
         `são a frequência de cada valor nos sorteios, e em vermelho está a chance que a teoria dá a cada valor. ` +
         (n <= 10 ? `Com 10 valores o histograma ainda não se parece com a distribuição teórica. Escolha 1.000 e rode de novo.` :
                    `Quanto mais sorteios, mais as barras se encaixam no vermelho. Aperte Rodar de novo: os valores sorteados mudam, mas o formato do histograma continua o mesmo.`);
-      $("anim").classList.remove("escondido");
       $("repetir").disabled = false; $("passo").disabled = false;
-      rodou = true;
       $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
-      anima(false);
+      anima();
     } else {
       $("aviso").textContent = "O R não devolveu os valores esperados.";
     }
@@ -331,8 +360,8 @@ async function rodar() {
   }
 }
 
-// ---------- a animação: o histograma enchendo ----------
-let quadro = null, estado = null;
+// ---------- a animação: o histograma enchendo, na velocidade escolhida, com pausa ----------
+let quadro = null, estado = null, ultimo = 0;
 function preparaEstado() {
   const [a, b] = dist.faixa(valores);
   let nb, largura, kmin;
@@ -340,9 +369,10 @@ function preparaEstado() {
   else { nb = 40; largura = (b - a) / nb; kmin = a; }
   // escala vertical: a teoria manda; as barras sao frequencia (discreta) ou densidade (continua)
   let ymax = 0; for (const p of teoria.p) if (p > ymax) ymax = p;
-  return { k: 0, a, b, nb, largura, kmin, contagens: new Int32Array(nb), ymax: ymax * 1.25, soma: 0, soma2: 0 };
+  return { k: 0, acum: 0, a, b, nb, largura, kmin, contagens: new Int32Array(nb), ymax: ymax * 1.25, soma: 0, soma2: 0 };
 }
 function avanca(st, ate) {
+  if (!dados) return;
   for (; st.k < ate && st.k < n; st.k++) {
     const v = dados[st.k];
     st.soma += v; st.soma2 += v * v;
@@ -375,12 +405,21 @@ function desenha(st) {
   const fonte = Math.max(11, Math.round(W / 55));
   const azul = "#4b6ea9", vermelho = "#d62828";
   const P = { x0: 14, x1: W - 14, y0: 50, y1: H - 36 };
-  // titulo em duas linhas
+  // titulo em duas linhas (a segunda pode quebrar)
   g.fillStyle = "#1c2430"; g.textAlign = "center";
   g.font = `bold ${fonte + 2}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
-  g.fillText(st.k === 0 ? `Ainda nenhum valor sorteado` : `${fmtInt(st.k)} de ${fmtInt(n)} valores sorteados`, W / 2, 22);
+  g.fillText(st.k === 0 ? `${dist.nome}: a distribuição teórica, antes de sortear` : `${fmtInt(st.k)} de ${fmtInt(n)} valores sorteados`, W / 2, 22);
   g.font = `${fonte}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
-  g.fillStyle = "#555"; g.fillText("Azul: a frequência de cada valor nos sorteios; vermelho: a chance que a teoria dá a cada valor", W / 2, 40);
+  g.fillStyle = "#555";
+  // a linha de leitura quebra em duas quando nao cabe (celular)
+  const leitura = st.k === 0 ? "Em vermelho está a chance que a teoria dá a cada valor. Aperte Rodar e veja as barras azuis se aproximarem do vermelho."
+                             : "Azul: a frequência de cada valor nos sorteios; vermelho: a chance que a teoria dá a cada valor";
+  const linhas = [];
+  let atual = "";
+  for (const pal of leitura.split(" ")) { const tent = atual ? atual + " " + pal : pal; if (g.measureText(tent).width > W - 16 && atual) { linhas.push(atual); atual = pal; } else atual = tent; }
+  linhas.push(atual);
+  linhas.forEach((l, i) => g.fillText(l, W / 2, 40 + 15 * i));
+  P.y0 = 50 + 15 * (linhas.length - 1);
   // escalas
   const xa = dist.discreta ? st.kmin - 0.5 : st.a, xb = dist.discreta ? st.kmin + st.nb - 0.5 : st.b;
   const sx = v => P.x0 + (v - xa) / (xb - xa) * (P.x1 - P.x0);
@@ -419,27 +458,47 @@ function desenha(st) {
   // media teorica
   const m = dist.media(valores);
   g.strokeStyle = vermelho; g.setLineDash([6, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(sx(m), P.y0); g.lineTo(sx(m), P.y1); g.stroke(); g.setLineDash([]);
+  atualizaLista(st);
 }
-function anima(manual) {
-  if (quadro) cancelAnimationFrame(quadro);
+let quadrosLista = 0;
+function atualizaLista(st) {
+  if (!$("lista").open) return;
+  if (st.k > 0 && st.k < n && (++quadrosLista % 6) !== 0) return;   // durante a animacao, atualiza a cada 6 quadros
+  if (!dados || st.k === 0) { $("lista_txt").textContent = "Nenhum valor foi sorteado ainda. Aperte Rodar para começar."; return; }
+  const txt = Array.from(dados.slice(0, st.k), v => dist.discreta ? String(v) : fmt(v)).join("   ");
+  $("lista_txt").textContent = `${st.k < n ? `Os ${fmtInt(st.k)} valores sorteados até agora` : `Os ${fmtInt(n)} valores sorteados`}, na ordem em que saíram:\n` + txt;
+}
+function pararQuadro() { if (quadro) { cancelAnimationFrame(quadro); quadro = null; } }
+function velocidade() { return n / (DURACAO[n] || 5000) * 1000 * fator; }   // valores por segundo
+function anima() {
+  pararQuadro();
   estado = preparaEstado();
   $("res_media").textContent = "—"; $("res_dp").textContent = "—";
   desenha(estado);
-  if (manual) return;
-  const duracao = Math.max(2000, Math.min(n * 300, 4000));
-  const inicio = performance.now();
-  const passo = () => {
-    const t = (performance.now() - inicio) / duracao;
-    const ate = t >= 1 ? n : Math.max(1, Math.floor(n * t));
-    avanca(estado, ate); desenha(estado);
-    if (estado.k < n) quadro = requestAnimationFrame(passo); else quadro = null;
-  };
-  quadro = requestAnimationFrame(passo);
+  continuar();
+}
+function continuar() {
+  ultimo = performance.now();
+  $("pausa").textContent = "Pausar"; $("pausa").disabled = false;
+  quadro = requestAnimationFrame(quadroSeguinte);
+}
+function quadroSeguinte(agora) {
+  const dt = Math.min(0.25, (agora - ultimo) / 1000); ultimo = agora;
+  estado.acum = Math.min(n, estado.acum + dt * velocidade());
+  const ate = Math.floor(estado.acum);
+  if (ate > estado.k) { avanca(estado, ate); desenha(estado); }
+  if (estado.k < n) quadro = requestAnimationFrame(quadroSeguinte);
+  else { quadro = null; $("pausa").disabled = true; }
+}
+function pausar() {
+  if (quadro) { pararQuadro(); $("pausa").textContent = "Continuar"; }
+  else if (estado && dados && estado.k < n) continuar();
 }
 function passoAPasso() {
-  if (!estado || estado.k >= n) anima(true);
-  if (quadro) { cancelAnimationFrame(quadro); quadro = null; }
-  avanca(estado, estado.k + 1); desenha(estado);
+  if (!estado || estado.k >= n) { pararQuadro(); estado = preparaEstado(); $("res_media").textContent = "—"; $("res_dp").textContent = "—"; }
+  if (quadro) { pararQuadro(); $("pausa").textContent = "Continuar"; }
+  avanca(estado, estado.k + 1); estado.acum = estado.k; desenha(estado);
+  $("pausa").disabled = estado.k >= n; if (estado.k < n) $("pausa").textContent = "Continuar";
 }
 
 montaDist(DISTS[0]);
