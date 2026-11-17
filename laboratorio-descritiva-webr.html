@@ -4,68 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Laboratório da Média e da Mediana — R no navegador</title>
-<meta name="description" content="Média, mediana e desvio-padrão em linguagem simples: escolha o formato da amostra, acrescente um valor absurdo e veja qual medida sente. Simulação com R rodando no navegador, inclusive no celular.">
-<style>
-  :root { color-scheme: light; --azul:#1a4f8b; --cinza:#f4f5f7; --borda:#d8dce2; --verde:#157347; --verm:#b02a37; }
-  * { box-sizing: border-box; }
-  body { background: #fff; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-         margin: 0; padding: 16px; max-width: 820px; margin-inline: auto;
-         color: #1c2430; line-height: 1.5; }
-  h1 { font-size: 1.3rem; color: var(--azul); margin-bottom: 4px; }
-  h2 { font-size: 1.02rem; color: var(--azul); margin: 22px 0 6px; }
-  .sub { color: #5a6573; font-size: .92rem; margin-top: 0; }
-  .chamada { border-left: 5px solid var(--azul); background: #eef3fa; padding: 12px 14px;
-             margin: 14px 0; font-size: 1.02rem; border-radius: 0 10px 10px 0; }
-  .chamada b { color: var(--azul); }
-  .chamada p { margin: 0; } .chamada p + p { margin-top: 8px; }
-  .nota { font-size: .92rem; color: #5a6573; margin: 8px 0; }
-  .cenarios { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-              gap: 8px; margin: 8px 0 4px; }
-  .cenarios button { border: 1px solid var(--borda); border-radius: 8px;
-              padding: 10px; font-size: .88rem; cursor: pointer; background: #fff;
-              text-align: left; line-height: 1.35; }
-  .cenarios button b { color: var(--azul); }
-  .cenarios button.ativo { outline: 3px solid var(--azul); background: #eef3fa; }
-  .cenarios button .tag { display: none; color: var(--verde); font-weight: 700; }
-  .cenarios button.ativo .tag { display: inline; }
-  .ctl { font-size: .92rem; margin: 8px 0 4px; }
-  .opcoes { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
-  .opcoes button { border: 1px solid var(--borda); background: #fff; border-radius: 8px;
-                   padding: 9px 14px; font-size: 1rem; font-weight: 700; cursor: pointer;
-                   font-family: ui-monospace, Consolas, monospace; min-width: 64px; }
-  .opcoes button.texto { font-family: inherit; font-weight: 600; font-size: .9rem; text-align: left; }
-  .opcoes button.ativo { background: var(--azul); color: #fff; border-color: var(--azul); }
-  .previsao { font-size: .95rem; background: #fffbe8; border: 1px solid #e8ddb0;
-              border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
-  .botoes { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; align-items: center; }
-  .botoes button { border: 0; border-radius: 8px; padding: 12px 22px; font-size: 1rem;
-           font-weight: 600; cursor: pointer; }
-  #rodar { background: var(--azul); color: #fff; min-width: 140px; }
-  #rodar:disabled { background: #9fb3cb; cursor: wait; }
-  #resultado.desatualizado { opacity: .45; }
-  #aviso { font-size: .9rem; color: var(--verm); font-weight: 600; margin: 6px 0; min-height: 1.2em; }
-  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-  .card { border: 2px solid var(--borda); border-radius: 10px; padding: 10px 12px; }
-  .card h3 { margin: 0 0 4px; font-size: .9rem; }
-  .card .big { font-size: 1.7rem; font-weight: 800; font-family: ui-monospace, Consolas, monospace; }
-  .card.media { border-color: var(--verm); } .card.media h3 { color: var(--verm); }
-  .card.mediana { border-color: var(--azul); } .card.mediana h3 { color: var(--azul); }
-  .card .nota { font-size: .8rem; color: #5a6573; margin: 0; }
-  #verifica { font-size: .92rem; margin-top: 8px; }
-  #graficos canvas { width: 100%; height: auto; border: 1px solid var(--borda);
-                     border-radius: 10px; margin-top: 12px; background: #fff; display: block; }
-  details { margin-top: 12px; font-size: .88rem; }
-  details pre { background: #10151c; color: #d7e3f0; border-radius: 10px; padding: 12px;
-                font-size: .8rem; overflow-x: auto; white-space: pre-wrap; }
-  .box { background: var(--cinza); border: 1px solid var(--borda);
-         border-radius: 10px; padding: 12px; margin: 12px 0; font-size: .92rem; }
-  footer { color: #5a6573; font-size: .85rem; margin-top: 24px;
-           border-top: 1px solid var(--borda); padding-top: 12px; }
-  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
-</style>
+<meta name="description" content="Média, mediana e desvio-padrão em linguagem simples: veja a amostra crescer um valor de cada vez, com as três medidas recalculadas ao vivo, e acrescente um valor absurdo para ver qual medida muda com ele. Simulação com R rodando no navegador, inclusive no celular.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="laboratorio.css">
+<style>
+  .cenarios { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 4px; }
+  .cenarios button { padding: 10px; font-size: .88rem; cursor: pointer; text-align: left; line-height: 1.35; }
+  .cenarios button .tag { display: none; color: var(--verde); font-weight: 700; }
+  .cenarios button.ativo .tag { display: inline; }
+  .cards.tres { grid-template-columns: 1fr 1fr 1fr; }
+  .card.media { border-top-color: var(--verm); } .card.mediana { border-top-color: var(--azul); } .card.dp { border-top-color: var(--suave); }
+  @media (max-width: 640px) { .cenarios, .cards.tres { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
 <header class="faixa"><div class="faixa-in">
@@ -82,46 +33,56 @@
   <p><b>Três números resumem uma amostra inteira: a média, a mediana e o desvio-padrão.</b>
   Em linguagem simples: a média é a soma de todos os valores dividida por quantos são; a mediana
   é o valor do meio, com metade da amostra abaixo dela e metade acima; o desvio-padrão diz o
-  quanto os valores se espalham em torno da média. Numa amostra simétrica, média e mediana quase
-  coincidem. Quando há valores muito altos, como nos salários, a média sobe e a mediana fica onde
+  quanto os valores se espalham em torno da média. Numa amostra simétrica, em que os valores são tão frequentes acima quanto abaixo do centro, média e mediana quase coincidem. Quando há valores muito altos, como nos salários, a média sobe e a mediana fica onde
   está.</p>
-  <p>Nesta página você escolhe o formato da amostra, acrescenta um valor absurdo e vê qual das
-  medidas muda com ele.</p>
+  <p>Nesta página você escolhe como os valores se distribuem na população, vê a amostra crescer um valor de cada vez,
+  com as três medidas recalculadas a cada valor novo, e acrescenta um valor absurdo no fim para
+  ver qual das medidas muda com ele.</p>
 </div>
 
-<p class="nota">A simulação sorteia <b>n</b> valores da população escolhida, calcula as três
-medidas e desenha a amostra de dois jeitos: histograma e boxplot.</p>
+<p class="nota">O R (o programa de estatística) sorteia da população escolhida uma quantidade <b>n</b> de valores; você escolhe esse <b>n</b> logo abaixo. A página
+mostra os valores entrando um a um, recalcula média, mediana e desvio-padrão a cada valor novo e desenha a amostra de dois jeitos: o histograma, com uma barra para cada faixa de valores, e o boxplot, um diagrama de caixa que mostra onde fica a metade central dos valores. Antes de sortear, o gráfico mostra a população de onde
+os valores vão sair.</p>
 
 <h2>1. Escolha a população</h2>
 <div class="cenarios" id="cenarios"></div>
 
 <h2>2. Escolha o tamanho da amostra</h2>
-<div class="ctl"><b>n</b> = quantos valores entram na amostra.</div>
+<div class="ctl"><b>n</b> é a quantidade de valores que entram na amostra.</div>
 <div class="opcoes" id="ns"></div>
 
 <h2>3. Acrescente um valor absurdo, se quiser</h2>
-<div class="ctl">Um único valor a mais, muito acima do maior da amostra.</div>
+<div class="ctl">Você pode acrescentar um único valor a mais, muito acima do maior valor da amostra. Ele entra por último, depois dos <b>n</b> valores sorteados.</div>
 <div class="opcoes" id="exts"></div>
 
 <div class="previsao" id="previsao"></div>
 
 <div class="botoes">
   <button id="rodar" disabled>carregando o R…</button>
-  <span class="nota" style="margin:0">Cada clique faz um sorteio novo.</span>
+  <button id="pausa" class="sec" disabled>Pausar</button>
+  <button id="passo" class="sec" disabled>Um valor de cada vez</button>
+  <button id="repetir" class="sec" disabled>Rever o sorteio</button>
 </div>
+<div class="veloc"><label for="vel">Velocidade do sorteio:</label>
+  <input type="range" id="vel" min="-2" max="2" step="1" value="0"> <span id="vel_txt"></span></div>
 <div id="aviso"></div>
 
 <div id="resultado">
-  <div class="cards">
+  <div class="cards tres">
     <div class="card media"><h3>MÉDIA</h3>
       <div class="big" id="res_media">—</div>
-      <p class="nota">A soma de todos os valores, dividida por quantos são.</p></div>
+      <p class="nota">A média é a soma de todos os valores, dividida por quantos são.</p></div>
     <div class="card mediana"><h3>MEDIANA</h3>
       <div class="big" id="res_mediana">—</div>
-      <p class="nota">O valor do meio: metade da amostra abaixo, metade acima.</p></div>
+      <p class="nota">A mediana é o valor do meio: metade da amostra fica abaixo dela e metade fica acima.</p></div>
+    <div class="card dp"><h3>DESVIO-PADRÃO</h3>
+      <div class="big" id="res_dp">—</div>
+      <p class="nota">O desvio-padrão mede o quanto os valores se espalham em torno da média.</p></div>
   </div>
   <div id="verifica"></div>
-  <div id="graficos"></div>
+  <canvas id="anim1"></canvas>
+  <canvas id="anim2"></canvas>
+  <details class="lista" id="lista"><summary>Ver a lista dos valores sorteados</summary><pre id="lista_txt"></pre></details>
 </div>
 
 <details><summary>Ver o código R que está rodando (muda com os parâmetros)</summary>
@@ -156,87 +117,92 @@ medidas e desenha a amostra de dois jeitos: histograma e boxplot.</p>
 </div>
 
 <script type="module">
+const phi = z => Math.exp(-0.5 * z * z) / Math.sqrt(2 * Math.PI);
+const MU = Math.log(2500), SIG = 0.8;
+// cada população: o R que a sorteia, a curva (densidade), a faixa do gráfico e as medidas da população
 const POPS = [
   { id: "norm", nome: "Simétrica: notas de uma prova",
-    desc: "Notas em torno de 100, tão frequentes acima quanto abaixo. Média e mediana devem cair quase no mesmo lugar.",
+    desc: "As notas ficam em torno de 100 e são tão frequentes acima quanto abaixo desse valor. Média e mediana devem cair quase no mesmo lugar.",
     r: "rnorm(n, 100, 15)", unid: "",
-    nota: "Numa amostra simétrica, média e mediana caem praticamente no mesmo lugar. É o único caso em que tanto faz qual das duas você informa." },
+    f: x => phi((x - 100) / 15) / 15, faixa: [40, 160], mu: 100, md: 100, q1: 100 - 0.6745 * 15, q3: 100 + 0.6745 * 15, dp: 15,
+    nota: "Numa amostra simétrica, média e mediana caem praticamente no mesmo lugar. Só numa amostra simétrica tanto faz qual das duas você informa." },
   { id: "salario", nome: "Salários",
-    desc: "Muitos salários baixos e poucos muito altos, como em quase toda distribuição de renda.",
+    desc: "Há muitos salários baixos e poucos muito altos, como em quase toda distribuição de renda.",
     r: "rlnorm(n, log(2500), 0.8)", unid: "R$ ",
+    f: x => x <= 0 ? 0 : phi((Math.log(x) - MU) / SIG) / (x * SIG), faixa: [0, Math.exp(MU + 2.3263 * SIG)],
+    mu: Math.exp(MU + SIG * SIG / 2), md: 2500, q1: Math.exp(MU - 0.6745 * SIG), q3: Math.exp(MU + 0.6745 * SIG), dp: Math.sqrt(Math.exp(SIG * SIG) - 1) * Math.exp(MU + SIG * SIG / 2),
     nota: "Os poucos salários muito altos puxam a média para cima da mediana. Por isso as estatísticas de renda costumam informar a mediana: ela descreve melhor quem está no meio da população." },
   { id: "bimodal", nome: "Dois grupos",
-    desc: "Duas populações misturadas na mesma amostra, uma em torno de 60 e outra em torno de 140.",
+    desc: "A amostra mistura duas populações, uma em torno de 60 e outra em torno de 140.",
     r: "ifelse(rbinom(n, 1, 0.5) == 1, rnorm(n, 60, 8), rnorm(n, 140, 8))", unid: "",
-    nota: "As duas medidas falham aqui, de maneiras diferentes. A média cai no vale entre os grupos, num valor que quase ninguém tem. A mediana cai dentro de um dos grupos, e pula de um para o outro conforme qual grupo calhou de ter mais valores: aperte Rodar algumas vezes e veja a mediana mudar de grupo. Quando há dois grupos, nenhum número sozinho resume a amostra; é para descobrir isso que se olha o histograma antes de calcular." },
+    f: x => 0.5 * phi((x - 60) / 8) / 8 + 0.5 * phi((x - 140) / 8) / 8, faixa: [30, 170], mu: 100, md: 100, q1: 60, q3: 140, dp: Math.sqrt(64 + 1600),
+    nota: "A média e a mediana falham aqui, de maneiras diferentes. A média cai no vale entre os grupos, num valor que quase ninguém tem. A mediana cai dentro de um dos grupos, e pula de um para o outro conforme qual grupo calhou de ter mais valores: aperte Rodar algumas vezes e veja a mediana mudar de grupo. Quando há dois grupos, nenhum número sozinho resume a amostra; é para descobrir isso que se olha o histograma antes de calcular." },
   { id: "unif", nome: "Uniforme entre 50 e 150",
     desc: "Todo valor entre 50 e 150 tem a mesma chance de sair.",
     r: "runif(n, 50, 150)", unid: "",
+    f: x => (x >= 50 && x <= 150) ? 0.01 : 0, faixa: [40, 160], mu: 100, md: 100, q1: 75, q3: 125, dp: 100 / Math.sqrt(12),
     nota: "Aqui o desvio-padrão é grande sem que haja valores extremos: os valores estão espalhados por igual. Dispersão alta quer dizer que os valores estão espalhados, e não que há valores absurdos." },
 ];
 const NS = [30, 300, 3000];
-const EXTS = [{ v: 0, r: "nenhum" }, { v: 5, r: "um valor alto: o maior da amostra mais 5 desvios-padrão" }, { v: 20, r: "um valor absurdo: o maior mais 20 desvios-padrão" }];
+const EXTS = [{ v: 0, r: "nenhum" }, { v: 5, r: "um valor alto: o maior da amostra mais 5 desvios-padrão" }, { v: 20, r: "um valor absurdo: o maior da amostra mais 20 desvios-padrão" }];
+const DURACAO = { 30: 3000, 300: 5000, 3000: 7000 };   // ms na velocidade normal
+const ESPERA = 1.0;                                     // segundos de pausa antes de o valor acrescentado entrar
 
 const $ = id => document.getElementById(id);
 const fmt = (x, d = 1) => {
-  if (x === null || Number.isNaN(x)) return "—";
+  if (x === null || x === undefined || Number.isNaN(x)) return "—";
   const v = x.toFixed(d);
-  return v.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d)(?=,|$))/g, ".");
+  return v.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d)(?=,|$))/g, ".").replace("-", "−");
 };
+const fmtInt = k => k.toLocaleString("pt-BR");
 let pop = POPS[0], n = 300, ext = 0;
 let seed = Math.floor(Math.random() * 100000);
-let rodou = false;
+let fator = 1;
+let dados = null;     // { x: os valores na ordem em que saíram (o acrescentado por último), res: as medidas calculadas pelo R }
+const total = () => n + (ext > 0 ? 1 : 0);
 
 function codigoR() {
   return `set.seed(${seed})
 n <- ${n}
 x0 <- ${pop.r}                      # a amostra sorteada
-${ext > 0 ? `x  <- c(x0, max(x0) + ${ext} * sd(x0))  # mais um valor, muito acima do maior` : `x  <- x0                            # sem valor acrescentado`}
+${ext > 0 ? `x  <- c(x0, max(x0) + ${ext} * sd(x0))  # mais um valor, muito acima do maior valor sorteado, que entra por último` : `x  <- x0                            # sem valor acrescentado`}
 
 media   <- mean(x)
 mediana <- median(x)
 dp      <- sd(x)
 q       <- quantile(x, c(0.25, 0.75))
-abaixo  <- mean(x < media)          # que fracao da amostra fica abaixo da media
+abaixo  <- mean(x < media)          # que fração da amostra fica abaixo da média
 cat("RES", media, mediana, dp, q[1], q[2], abaixo, length(x), mean(x0), median(x0), sd(x0), "\\n")
-
-par(mfrow = c(2, 1), mar = c(4.2, 1.2, 4.4, 1))
-titulos <- function(principal, explicacao) {
-  title(main = principal, line = 2.4)
-  mtext(explicacao, side = 3, line = 0.6, cex = 0.9, col = "grey30")
-}
-
-# 1. o histograma, limitado a 99% dos valores mas sempre incluindo media e mediana
-lim <- range(c(quantile(x, c(0, 0.99)), media, mediana))
-xv  <- x[x >= lim[1] & x <= lim[2]]
-hist(xv, breaks = 40, col = "grey85", border = "white", xlim = lim, yaxt = "n", ylab = "", xlab = "valor", main = "")
-abline(v = media,   col = "#b02a37", lwd = 3)
-abline(v = mediana, col = "#1a4f8b", lwd = 3, lty = 2)
-legend("topright", bty = "n", lwd = 3, lty = c(1, 2), col = c("#b02a37", "#1a4f8b"), legend = c("média", "mediana"))
-titulos(paste0("A amostra de ", length(x), " valores, com a média e a mediana"),
-        "Cada barra conta quantos valores caem naquela faixa")
-
-# 2. o boxplot
-boxplot(x, horizontal = TRUE, col = "grey90", xlab = "valor", main = "")
-abline(v = media, col = "#b02a37", lwd = 2)
-titulos("A mesma amostra em boxplot",
-        "A caixa vai do 1º ao 3º quartil, o traço é a mediana e os pontos soltos são os valores extremos")`;
+cat("X", x, "\\n")                   # devolve os valores à página, que mostra a amostra crescendo`;
 }
 
 function atualizaPainel() {
   document.querySelectorAll("#ns button").forEach(b => b.classList.toggle("ativo", parseInt(b.dataset.v) === n));
   document.querySelectorAll("#exts button").forEach(b => b.classList.toggle("ativo", parseInt(b.dataset.v) === ext));
-  $("previsao").innerHTML = ext > 0
-    ? `<b>O que esperar:</b> aos ${fmt(n, 0)} valores sorteados entra mais um, ${ext} desvios-padrão acima do maior. ` +
-      `Ele é um só entre os ${fmt(n + 1, 0)} valores. A média e o desvio-padrão usam todos os valores, então devem se mover; ` +
+  const u = pop.unid;
+  const popTxt = pop.mu === pop.md
+    ? `Na população, a média e a mediana valem ${u}${fmt(pop.mu, 0)}` + (pop.id === "bimodal" ? `, bem no vale entre os dois grupos` : ``) + `; o desvio-padrão é ${u}${fmt(pop.dp)}.`
+    : `Na população, a média é ${u}${fmt(pop.mu, 0)} e a mediana é ${u}${fmt(pop.md, 0)}; o desvio-padrão é ${u}${fmt(pop.dp, 0)}.`;
+  $("previsao").innerHTML = `<b>O que esperar:</b> ${popTxt} ` + (ext > 0
+    ? `Aos ${fmtInt(n)} valores sorteados entra mais um, por último, ${ext} desvios-padrão acima do maior deles. ` +
+      `Ele é um só entre os ${fmtInt(n + 1)} valores. A média e o desvio-padrão usam todos os valores, então devem se mover; ` +
       `a mediana só depende do valor que fica no meio quando se põem todos em ordem, então quase não deve se mover.`
-    : `<b>O que esperar:</b> saem ${fmt(n, 0)} valores sorteados, sem nada acrescentado. ${pop.nota}`;
+    : `Saem ${fmtInt(n)} valores sorteados, sem nada acrescentado. ${pop.nota}`);
   $("codigoview").textContent = codigoR();
 }
-function marcaDesatualizado() {
-  if (!rodou) return;
-  $("resultado").classList.add("desatualizado");
-  $("aviso").textContent = "Você mudou um parâmetro. Aperte Rodar para ver o resultado novo.";
+function atualizaVel() {
+  const seg = Math.round((DURACAO[n] || 5000) / 100 / fator) / 10;
+  $("vel_txt").textContent = `cerca de ${String(seg).replace(".", ",")} segundos para sortear os ${fmtInt(n)} valores`;
+}
+function limpaCartoes() { $("res_media").textContent = "—"; $("res_mediana").textContent = "—"; $("res_dp").textContent = "—"; }
+// um parâmetro mudou: limpa o sorteio anterior e mostra só a população nova
+function reinicia() {
+  pararQuadro();
+  dados = null; dica1 = dica2 = null;
+  limpaCartoes();
+  $("verifica").innerHTML = ""; $("aviso").textContent = "";
+  $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true; $("pausa").textContent = "Pausar";
+  estado = preparaEstado(); desenha(estado);
 }
 POPS.forEach((p, i) => {
   const b = document.createElement("button");
@@ -245,22 +211,28 @@ POPS.forEach((p, i) => {
     pop = p;
     document.querySelectorAll(".cenarios button").forEach(x => x.classList.remove("ativo"));
     b.classList.add("ativo");
-    atualizaPainel(); marcaDesatualizado();
+    atualizaPainel(); reinicia();
   });
   $("cenarios").appendChild(b);
   if (i === 0) b.classList.add("ativo");
 });
 NS.forEach(v => {
-  const b = document.createElement("button"); b.textContent = fmt(v, 0); b.dataset.v = v;
-  b.addEventListener("click", () => { n = v; atualizaPainel(); marcaDesatualizado(); });
+  const b = document.createElement("button"); b.textContent = fmtInt(v); b.dataset.v = v;
+  b.addEventListener("click", () => { n = v; atualizaPainel(); atualizaVel(); reinicia(); });
   $("ns").appendChild(b);
 });
 EXTS.forEach(o => {
   const b = document.createElement("button"); b.textContent = o.r; b.dataset.v = o.v; b.classList.add("texto");
-  b.addEventListener("click", () => { ext = o.v; atualizaPainel(); marcaDesatualizado(); });
+  b.addEventListener("click", () => { ext = o.v; atualizaPainel(); reinicia(); });
   $("exts").appendChild(b);
 });
 $("rodar").addEventListener("click", rodar);
+$("repetir").addEventListener("click", () => { if (dados) anima(); });
+$("passo").addEventListener("click", () => { if (dados) passoAPasso(); });
+$("pausa").addEventListener("click", pausar);
+$("vel").addEventListener("input", () => { fator = Math.pow(2, parseInt($("vel").value)); atualizaVel(); });
+$("lista").addEventListener("toggle", () => { quadrosLista = -1; if (estado) atualizaLista(estado); });
+window.addEventListener("resize", () => { if (estado) desenha(estado); });
 
 let webR, shelter;
 async function iniciar() {
@@ -282,54 +254,28 @@ async function rodar() {
   seed = Math.floor(Math.random() * 100000);
   atualizaPainel();
   $("rodar").disabled = true; $("rodar").textContent = "sorteando…";
-  $("aviso").textContent = ""; $("resultado").classList.remove("desatualizado");
-  $("graficos").innerHTML = "";
+  $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true;
+  $("aviso").textContent = "";
   try {
-    const captura = await shelter.captureR(codigoR(), {
-      withAutoprint: false, captureStreams: true, captureConditions: true,
-      captureGraphics: { width: 700, height: 620, bg: "white", pointsize: 13 }
-    });
-    let r = null;
+    const captura = await shelter.captureR(codigoR(), { withAutoprint: false, captureStreams: true, captureConditions: true });
+    let r = null, x = null;
     for (const linha of captura.output) {
-      if (linha.type === "stdout" && linha.data.startsWith("RES")) {
-        const p = linha.data.trim().split(/\s+/);
-        r = { media: +p[1], mediana: +p[2], dp: +p[3], q1: +p[4], q3: +p[5], abaixo: +p[6], n: +p[7],
-              media0: +p[8], mediana0: +p[9], dp0: +p[10] };
-      }
+      if (linha.type !== "stdout") continue;
+      const d = linha.data;
+      if (d.startsWith("RES")) {
+        const p = d.trim().split(/\s+/);
+        r = { media: +p[1], mediana: +p[2], dp: +p[3], q1: +p[4], q3: +p[5], abaixo: +p[6], n: +p[7], media0: +p[8], mediana0: +p[9], dp0: +p[10] };
+      } else if (d.startsWith("X ")) x = d.trim().split(/\s+/).slice(1).map(parseFloat);
     }
-    if (r) {
-      const u = pop.unid;
-      $("res_media").textContent = u + fmt(r.media);
-      $("res_mediana").textContent = u + fmt(r.mediana);
-      const dif = (r.media - r.mediana) / r.mediana * 100;
-      let txt = `<b>Desvio-padrão:</b> ${u}${fmt(r.dp)}. <b>Quartis:</b> ${u}${fmt(r.q1)} e ${u}${fmt(r.q3)}; metade da ` +
-        `amostra está entre esses dois valores. ` +
-        (Math.abs(dif) < 2
-          ? `Média e mediana praticamente coincidem. `
-          : `A média está ${fmt(Math.abs(dif), 1)}% ${dif > 0 ? "acima" : "abaixo"} da mediana. `) +
-        `${fmt(r.abaixo * 100, 0)}% da amostra está abaixo da média` +
-        (r.abaixo > 0.55 ? `: a maioria fica abaixo do valor "médio". Isso só soa estranho até lembrar que o valor do meio é a mediana. A média pode ficar longe do meio.` : `.`);
-      if (ext > 0) {
-        const dMedia = Math.abs(r.media - r.media0) / r.media0 * 100;
-        const dMediana = Math.abs(r.mediana - r.mediana0) / r.mediana0 * 100;
-        const dDp = (r.dp / r.dp0 - 1) * 100;
-        txt += `<br><br><b>O efeito de um único valor entre ${fmt(r.n, 0)}:</b> a média saiu de ${u}${fmt(r.media0)} para ` +
-          `${u}${fmt(r.media)} (${fmt(dMedia, 1)}% de mudança); a mediana saiu de ${u}${fmt(r.mediana0)} para ` +
-          `${u}${fmt(r.mediana)} (${fmt(dMediana, 1)}%); o desvio-padrão saiu de ${u}${fmt(r.dp0)} para ${u}${fmt(r.dp)} ` +
-          `(${dDp > 0 ? "+" : ""}${fmt(dDp, 0)}%). A mediana quase não se move porque acrescentar um valor acima de todos os ` +
-          `outros quase não muda quem está no meio. Escolha n = 30 e rode de novo: quanto menor a amostra, mais peso ` +
-          `tem esse único valor.`;
-      }
-      $("verifica").innerHTML = txt;
+    if (r && x && x.length === total()) {
+      dados = { x, res: r };
+      escreveVerifica(r);
+      $("repetir").disabled = false; $("passo").disabled = false;
+      $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
+      anima();
+    } else {
+      $("aviso").textContent = "O R não devolveu os valores esperados.";
     }
-    for (const img of captura.images) {
-      const cv = document.createElement("canvas");
-      cv.width = img.width; cv.height = img.height;
-      cv.getContext("2d").drawImage(img, 0, 0);
-      $("graficos").appendChild(cv);
-    }
-    rodou = true;
-    $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
     $("aviso").textContent = "Erro na execução: " + e.message;
   } finally {
@@ -338,7 +284,296 @@ async function rodar() {
   }
 }
 
+function escreveVerifica(r) {
+  const u = pop.unid;
+  const dif = (r.media - r.mediana) / r.mediana * 100;
+  let txt = `<b>Previsto e observado:</b> na população, a média é ${u}${fmt(pop.mu, 0)} e a mediana é ${u}${fmt(pop.md, 0)}; ` +
+    `na amostra, a média saiu <b>${u}${fmt(r.media)}</b> e a mediana saiu <b>${u}${fmt(r.mediana)}</b>. ` +
+    `O desvio-padrão da amostra saiu ${u}${fmt(r.dp)}; na população, ele é ${u}${fmt(pop.dp)}. O 1º quartil da amostra saiu ${u}${fmt(r.q1)} e o 3º quartil saiu ${u}${fmt(r.q3)}: ` + `um quarto dos valores fica abaixo do primeiro, um quarto fica acima do segundo e metade da amostra está entre esses dois valores. ` +
+    (Math.abs(dif) < 2
+      ? `Média e mediana praticamente coincidem. `
+      : `A média está ${fmt(Math.abs(dif), 1)}% ${dif > 0 ? "acima" : "abaixo"} da mediana. `) +
+    `${fmt(r.abaixo * 100, 0)}% da amostra está abaixo da média` +
+    (r.abaixo > 0.55 ? `: a maioria fica abaixo do valor "médio". Isso só soa estranho até lembrar que o valor do meio é a mediana. A média pode ficar longe do meio.` : `.`);
+  if (ext > 0) {
+    const dMedia = Math.abs(r.media - r.media0) / r.media0 * 100;
+    const dMediana = Math.abs(r.mediana - r.mediana0) / r.mediana0 * 100;
+    const dDp = (r.dp / r.dp0 - 1) * 100;
+    txt += `<br><br><b>O efeito de um único valor entre ${fmtInt(r.n)}:</b> a média saiu de ${u}${fmt(r.media0)} para ` +
+      `${u}${fmt(r.media)} (${fmt(dMedia, 1)}% de mudança); a mediana saiu de ${u}${fmt(r.mediana0)} para ` +
+      `${u}${fmt(r.mediana)} (${fmt(dMediana, 1)}% de mudança); o desvio-padrão saiu de ${u}${fmt(r.dp0)} para ${u}${fmt(r.dp)} ` +
+      `(${dDp > 0 ? "+" : ""}${fmt(dDp, 0)}%). A mediana quase não se move porque acrescentar um valor acima de todos os ` +
+      `outros quase não muda quem está no meio. Escolha n = 30 e rode de novo: quanto menor a amostra, mais peso ` +
+      `tem esse único valor.`;
+  }
+  txt += ` <b>Nos gráficos:</b> as barras são a amostra e a curva vermelha é a população; no boxplot, a caixa vai do 1º ao 3º quartil, ` +
+    `o traço azul é a mediana e a linha vermelha é a média. Aperte Rodar de novo e veja outra amostra da mesma população.`;
+  $("verifica").innerHTML = txt;
+}
+
+// ---------- a animação: a amostra crescendo, com as medidas recalculadas a cada valor ----------
+let quadro = null, estado = null, ultimo = 0;
+function preparaEstado() {
+  const [a, b] = pop.faixa, nb = 40;
+  return { k: 0, acum: 0, espera: 0, a, b, nb, largura: (b - a) / nb, contagens: new Int32Array(nb), ord: [], soma: 0, soma2: 0, fora: 0 };
+}
+function insereOrdenado(ord, v) {
+  let lo = 0, hi = ord.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (ord[m] < v) lo = m + 1; else hi = m; }
+  ord.splice(lo, 0, v);
+}
+function quantil(ord, p) {   // o mesmo cálculo do R (tipo 7)
+  const k = ord.length; if (k === 0) return NaN;
+  const h = (k - 1) * p, i = Math.floor(h);
+  return i + 1 < k ? ord[i] + (h - i) * (ord[i + 1] - ord[i]) : ord[i];
+}
+function medidas(st) {
+  const k = st.k; if (k === 0) return null;
+  const media = st.soma / k;
+  const vr = k > 1 ? (st.soma2 - k * media * media) / (k - 1) : 0;
+  return { media, mediana: quantil(st.ord, 0.5), dp: k > 1 ? Math.sqrt(Math.max(0, vr)) : NaN, q1: quantil(st.ord, 0.25), q3: quantil(st.ord, 0.75) };
+}
+function avanca(st, ate) {
+  if (!dados) return;
+  const N = total();
+  for (; st.k < ate && st.k < N; st.k++) {
+    const v = dados.x[st.k];
+    st.soma += v; st.soma2 += v * v;
+    insereOrdenado(st.ord, v);
+    const i = Math.floor((v - st.a) / st.largura);
+    if (i >= 0 && i < st.nb) st.contagens[i]++; else if (v === st.b) st.contagens[st.nb - 1]++; else st.fora++;
+  }
+  const m = medidas(st);
+  if (m) { const u = pop.unid; $("res_media").textContent = u + fmt(m.media); $("res_mediana").textContent = u + fmt(m.mediana); $("res_dp").textContent = st.k > 1 ? u + fmt(m.dp) : "—"; }
+}
+function ticksBonitos(a, b, alvo = 5) {
+  const bruto = (b - a) / alvo, pot = Math.pow(10, Math.floor(Math.log10(bruto)));
+  const m = bruto / pot, passo = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * pot;
+  const out = []; for (let t = Math.ceil(a / passo - 1e-9) * passo; t <= b + 1e-9; t += passo) out.push(Math.round(t / passo) * passo);
+  return out;
+}
+const FONTE = '"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+const AZUL = "#1a4f8b", AZULCLARO = "#4b6ea9", VERMELHO = "#d62828", GRADE = "#e9edf2";
+function preparaCanvas(id, razao, minH = 0) {
+  const cv = $(id);
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 700, H = Math.max(minH, Math.round(W * razao));
+  if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  cv.style.height = H + "px";
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  return { g, W, H, fonte: Math.max(11, Math.round(W / 55)) };
+}
+function quebra(g, texto, largura) {
+  const linhas = []; let atual = "";
+  for (const pal of texto.split(" ")) { const tent = atual ? atual + " " + pal : pal; if (g.measureText(tent).width > largura && atual) { linhas.push(atual); atual = pal; } else atual = tent; }
+  linhas.push(atual);
+  return linhas;
+}
+function cabecalho(c, titulo, leitura) {
+  const { g, W, fonte } = c;
+  g.fillStyle = "#1c2430"; g.textAlign = "center";
+  g.font = `bold ${fonte + 2}px ${FONTE}`;
+  const lt = quebra(g, titulo, W - 16);
+  lt.forEach((l, i) => g.fillText(l, W / 2, 22 + 17 * i));
+  let y = 22 + 17 * (lt.length - 1) + 18;
+  g.font = `${fonte}px ${FONTE}`; g.fillStyle = "#555";
+  const ll = quebra(g, leitura, W - 16);
+  ll.forEach((l, i) => g.fillText(l, W / 2, y + 15 * i));
+  return y + 15 * (ll.length - 1) + 12;
+}
+const rotuloX = () => pop.unid ? "valor (R$)" : "valor";
+function desenha(st) {
+  desenhaHistograma(st, dica1);
+  desenhaBoxplot(st, dica2);
+  atualizaLista(st);
+}
+function desenhaHistograma(st, dica) {
+  const c = preparaCanvas("anim1", 0.55, 250), { g, W, H, fonte } = c;
+  const u = pop.unid, m = medidas(st), N = total(), completa = st.k >= N, esperando = ext > 0 && st.k === n && !completa;
+  const titulo = st.k === 0 ? `A população escolhida (${pop.nome.toLowerCase()})`
+    : esperando ? `A amostra de ${fmtInt(n)} valores está completa; agora entra o valor acrescentado`
+    : `${fmtInt(st.k)} de ${fmtInt(N)} valores sorteados`;
+  const leitura = st.k === 0
+    ? `A curva vermelha é a população de onde a amostra vai sair. A linha vermelha é a média dela, ${u}${fmt(pop.mu, 0)}; a linha azul tracejada é a mediana, ${u}${fmt(pop.md, 0)}. Aperte Rodar e veja as barras encherem.`
+    : `Cada barra conta quantos valores caem na faixa que ela cobre; a curva vermelha é a população. A linha vermelha marca a média da amostra, ${u}${fmt(m.media)}; a linha azul tracejada marca a mediana, ${u}${fmt(m.mediana)}.` +
+      (completa && ext > 0 ? ` O valor acrescentado, ${u}${fmt(dados.x[N - 1])}, está fora do gráfico, à direita.` : ``);
+  const y0 = cabecalho(c, titulo, leitura);
+  const P = { x0: 14, x1: W - 14, y0, y1: H - 36 };
+  const sx = v => P.x0 + (v - st.a) / (st.b - st.a) * (P.x1 - P.x0);
+  // escala vertical: densidade; a curva da população manda, as barras podem passar
+  const curva = []; let fmax = 0;
+  for (let i = 0; i <= 200; i++) { const x = st.a + (st.b - st.a) * i / 200; const f = pop.f(x); curva.push([x, f]); if (f > fmax) fmax = f; }
+  let ymax = fmax * 1.25;
+  if (st.k > 0) for (let i = 0; i < st.nb; i++) { const h = st.contagens[i] / st.k / st.largura; if (h > ymax) ymax = h; }
+  const sy = v => P.y1 - v / ymax * (P.y1 - P.y0);
+  layout1 = { sx, sy, P, st };
+  // barras
+  if (st.k > 0) {
+    g.fillStyle = AZULCLARO;
+    for (let i = 0; i < st.nb; i++) {
+      const cnt = st.contagens[i]; if (!cnt) continue;
+      const l = st.a + i * st.largura, h = cnt / st.k / st.largura;
+      g.fillRect(sx(l), sy(h), Math.max(1, sx(l + st.largura) - sx(l) - 1), P.y1 - sy(h));
+    }
+  }
+  // a curva da população
+  g.strokeStyle = VERMELHO; g.lineWidth = 2.5; g.beginPath();
+  curva.forEach(([x, f], i) => { const X = sx(x), Y = sy(f); if (i === 0) g.moveTo(X, Y); else g.lineTo(X, Y); });
+  g.stroke();
+  // média e mediana (da população antes de sortear; da amostra depois)
+  const med = st.k === 0 ? pop.mu : m.media, mdn = st.k === 0 ? pop.md : m.mediana;
+  const linha = (v, cor, tracejado) => { if (v < st.a || v > st.b) return; g.strokeStyle = cor; g.lineWidth = 2.5; g.setLineDash(tracejado ? [7, 5] : []); g.beginPath(); g.moveTo(sx(v), P.y0); g.lineTo(sx(v), P.y1); g.stroke(); g.setLineDash([]); };
+  linha(med, VERMELHO, false); linha(mdn, AZUL, true);
+  // o último valor sorteado
+  if (st.k > 0) { const v = dados.x[st.k - 1]; if (v >= st.a && v <= st.b) { g.fillStyle = VERMELHO; g.beginPath(); g.arc(sx(v), P.y1 - 5, 4.5, 0, 2 * Math.PI); g.fill(); } }
+  // valores fora da faixa, à direita
+  if (st.fora > 0) { g.fillStyle = VERMELHO; g.font = `600 ${fonte}px ${FONTE}`; g.textAlign = "right"; g.fillText(`${fmtInt(st.fora)} ${st.fora === 1 ? "valor ficou" : "valores ficaram"} acima de ${u}${fmt(st.b, 0)}, fora do gráfico →`, P.x1, P.y0 + fonte); }
+  // eixo
+  g.strokeStyle = "#333"; g.lineWidth = 1; g.beginPath(); g.moveTo(P.x0, P.y1); g.lineTo(P.x1, P.y1); g.stroke();
+  g.fillStyle = "#333"; g.font = `${fonte}px ${FONTE}`; g.textAlign = "center";
+  for (const t of ticksBonitos(st.a, st.b, W < 500 ? 4 : 6)) { if (t < st.a || t > st.b) continue; g.beginPath(); g.moveTo(sx(t), P.y1); g.lineTo(sx(t), P.y1 + 4); g.stroke(); g.fillText(fmt(t, 0), sx(t), P.y1 + fonte + 4); }
+  g.fillText(rotuloX(), (P.x0 + P.x1) / 2, H - 6);
+  desenhaDica(g, W, fonte, dica);
+}
+function desenhaBoxplot(st, dica) {
+  const c = preparaCanvas("anim2", 0.3, 170), { g, W, H, fonte } = c;
+  const u = pop.unid, N = total();
+  const bp = st.k === 0 ? { q1: pop.q1, md: pop.md, q3: pop.q3, media: pop.mu, pontos: [] } : (() => { const m = medidas(st); return { q1: m.q1, md: m.mediana, q3: m.q3, media: m.media }; })();
+  const y0 = cabecalho(c, st.k === 0 ? "O boxplot da população" : `O boxplot dos ${fmtInt(st.k)} valores já sorteados`,
+    "A caixa vai do 1º ao 3º quartil e cobre a metade central dos valores; o traço azul é a mediana, a linha vermelha é a média e os pontos soltos são os valores extremos, longe da caixa.");
+  const P = { x0: 14, x1: W - 14, y0, y1: H - 36 };
+  const sx = v => P.x0 + (v - st.a) / (st.b - st.a) * (P.x1 - P.x0);
+  const yc = (P.y0 + P.y1) / 2, alt = Math.min(44, (P.y1 - P.y0) * 0.6);
+  const iqr = bp.q3 - bp.q1, lim1 = bp.q1 - 1.5 * iqr, lim2 = bp.q3 + 1.5 * iqr;
+  let w1 = bp.q1, w2 = bp.q3, fora = 0;
+  if (st.k === 0) { w1 = Math.max(st.a, lim1); w2 = Math.min(st.b, lim2); }
+  else {
+    for (let i = st.ord.length - 1; i >= 0; i--) { const v = st.ord[i]; if (v <= lim2) { w2 = Math.max(w2, v); break; } }
+    w1 = Math.min(w1, st.ord.find(v => v >= lim1) ?? bp.q1);
+  }
+  layout2 = { sx, P, bp, w1, w2 };
+  g.save(); g.beginPath(); g.rect(P.x0 - 6, P.y0, P.x1 - P.x0 + 12, P.y1 - P.y0); g.clip();
+  // bigodes
+  g.strokeStyle = "#555"; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(sx(w1), yc); g.lineTo(sx(bp.q1), yc); g.moveTo(sx(bp.q3), yc); g.lineTo(sx(w2), yc); g.stroke();
+  g.beginPath(); g.moveTo(sx(w1), yc - alt * 0.3); g.lineTo(sx(w1), yc + alt * 0.3); g.moveTo(sx(w2), yc - alt * 0.3); g.lineTo(sx(w2), yc + alt * 0.3); g.stroke();
+  // caixa
+  g.fillStyle = "#e8eff8"; g.strokeStyle = AZULCLARO; g.lineWidth = 1.5;
+  g.fillRect(sx(bp.q1), yc - alt / 2, sx(bp.q3) - sx(bp.q1), alt); g.strokeRect(sx(bp.q1), yc - alt / 2, sx(bp.q3) - sx(bp.q1), alt);
+  // mediana e média
+  g.strokeStyle = AZUL; g.lineWidth = 3; g.beginPath(); g.moveTo(sx(bp.md), yc - alt / 2); g.lineTo(sx(bp.md), yc + alt / 2); g.stroke();
+  g.strokeStyle = VERMELHO; g.lineWidth = 2.5; g.beginPath(); g.moveTo(sx(bp.media), yc - alt / 2 - 8); g.lineTo(sx(bp.media), yc + alt / 2 + 8); g.stroke();
+  // pontos soltos
+  if (st.k > 0) {
+    g.fillStyle = "rgba(85,85,85,0.7)";
+    let desenhados = 0;
+    for (const v of st.ord) { if ((v < lim1 || v > lim2)) { fora++; if (v >= st.a && v <= st.b && desenhados < 300) { g.beginPath(); g.arc(sx(v), yc, 3, 0, 2 * Math.PI); g.fill(); desenhados++; } } }
+  }
+  g.restore();
+  if (st.k > 0 && st.fora > 0) { g.fillStyle = VERMELHO; g.font = `600 ${fonte}px ${FONTE}`; g.textAlign = "right"; g.fillText(`${fmtInt(st.fora)} ${st.fora === 1 ? "valor ficou" : "valores ficaram"} acima de ${u}${fmt(st.b, 0)}, fora do gráfico →`, P.x1, P.y0 + fonte); }
+  // eixo
+  g.strokeStyle = "#333"; g.lineWidth = 1; g.beginPath(); g.moveTo(P.x0, P.y1); g.lineTo(P.x1, P.y1); g.stroke();
+  g.fillStyle = "#333"; g.font = `${fonte}px ${FONTE}`; g.textAlign = "center";
+  for (const t of ticksBonitos(st.a, st.b, W < 500 ? 4 : 6)) { if (t < st.a || t > st.b) continue; g.beginPath(); g.moveTo(sx(t), P.y1); g.lineTo(sx(t), P.y1 + 4); g.stroke(); g.fillText(fmt(t, 0), sx(t), P.y1 + fonte + 4); }
+  g.fillText(rotuloX(), (P.x0 + P.x1) / 2, H - 6);
+  desenhaDica(g, W, fonte, dica);
+}
+// ---------- o valor ao tocar ou passar o mouse ----------
+let layout1 = null, layout2 = null, dica1 = null, dica2 = null;
+function desenhaDica(g, W, fonte, d) {
+  if (!d) return;
+  g.font = `600 ${fonte}px ${FONTE}`;
+  const linhas = quebra(g, d.texto, W - 30);                       // a dica quebra em linhas quando não cabe (celular)
+  const tw = Math.max(...linhas.map(l => g.measureText(l).width)) + 14, th = (fonte + 5) * linhas.length + 7;
+  let x = d.x + 12, y = d.y - th - 8;
+  if (x + tw > W - 4) x = d.x - tw - 12;
+  x = Math.max(4, Math.min(W - tw - 4, x));
+  if (y < 4) y = d.y + 12;
+  g.fillStyle = "rgba(255,255,255,0.96)"; g.strokeStyle = "#9aa7b8"; g.lineWidth = 1;
+  g.beginPath(); g.roundRect(x, y, tw, th, 6); g.fill(); g.stroke();
+  g.fillStyle = "#1b2330"; g.textAlign = "left";
+  linhas.forEach((l, i) => g.fillText(l, x + 7, y + fonte + 4 + (fonte + 5) * i));
+  g.beginPath(); g.arc(d.x, d.y, 3.5, 0, 2 * Math.PI); g.fill();
+}
+function achaBarra(x, y) {
+  if (!dados || !layout1 || !estado || estado.k === 0) return null;
+  const { sx, sy, P, st } = layout1;
+  if (x < P.x0 || x > P.x1 || y < P.y0 || y > P.y1 + 4) return null;
+  const i = Math.floor((x - P.x0) / (P.x1 - P.x0) * st.nb); if (i < 0 || i >= st.nb) return null;
+  const c = st.contagens[i], l = st.a + i * st.largura, u = pop.unid;
+  return { x: sx(l + st.largura / 2), y: sy(c / st.k / st.largura), texto: `de ${u}${fmt(l, 0)} a ${u}${fmt(l + st.largura, 0)}: ${fmtInt(c)} de ${fmtInt(st.k)} ${c === 1 ? "valor" : "valores"}` };
+}
+function achaCaixa(x, y) {
+  if (!layout2 || !estado) return null;
+  const { sx, P, bp, w1, w2 } = layout2, u = pop.unid;
+  if (x < P.x0 || x > P.x1 || y < P.y0 || y > P.y1) return null;
+  const yc = (P.y0 + P.y1) / 2;
+  const quem = estado.k === 0 ? "da população" : `dos ${fmtInt(estado.k)} valores`;
+  return { x: sx(bp.md), y: yc, texto: `${quem}: 1º quartil ${u}${fmt(bp.q1)} · mediana ${u}${fmt(bp.md)} · 3º quartil ${u}${fmt(bp.q3)} · média ${u}${fmt(bp.media)}` };
+}
+function ligaDica(id, acha, poe) {
+  const cv = $(id);
+  const trata = e => { const r = cv.getBoundingClientRect(); poe(acha(e.clientX - r.left, e.clientY - r.top)); };
+  cv.addEventListener("pointermove", trata);
+  cv.addEventListener("pointerdown", trata);
+  cv.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") poe(null); });   // no celular, o toque deixa o valor na tela
+}
+ligaDica("anim1", achaBarra, d => { if ((d && d.texto) !== (dica1 && dica1.texto)) { dica1 = d; if (estado) desenhaHistograma(estado, dica1); } });
+ligaDica("anim2", achaCaixa, d => { if ((d && d.texto) !== (dica2 && dica2.texto)) { dica2 = d; if (estado) desenhaBoxplot(estado, dica2); } });
+
+let quadrosLista = 0;
+function atualizaLista(st) {
+  if (!$("lista").open) return;
+  const N = total();
+  if (st.k > 0 && st.k < N && (++quadrosLista % 6) !== 0) return;   // durante a animação, atualiza a cada 6 quadros
+  if (!dados || st.k === 0) { $("lista_txt").textContent = "Nenhum valor foi sorteado ainda. Aperte Rodar para começar."; return; }
+  const u = pop.unid;
+  const itens = dados.x.slice(0, st.k).map((v, i) => u + fmt(v) + (ext > 0 && i === N - 1 ? " (o valor acrescentado)" : ""));
+  $("lista_txt").textContent = `${st.k < N ? `Os ${fmtInt(st.k)} valores sorteados até agora` : `Os ${fmtInt(N)} valores`}, na ordem em que saíram:\n` + itens.join("   ");
+}
+function pararQuadro() { if (quadro) { cancelAnimationFrame(quadro); quadro = null; } }
+function velocidade() { return n / (DURACAO[n] || 5000) * 1000 * fator; }   // valores por segundo
+function anima() {
+  pararQuadro();
+  estado = preparaEstado();
+  limpaCartoes();
+  desenha(estado);
+  continuar();
+}
+function continuar() {
+  ultimo = performance.now();
+  $("pausa").textContent = "Pausar"; $("pausa").disabled = false;
+  quadro = requestAnimationFrame(quadroSeguinte);
+}
+function quadroSeguinte(agora) {
+  const dt = Math.min(0.25, (agora - ultimo) / 1000); ultimo = agora;
+  const N = total();
+  if (ext > 0 && estado.k === n) {         // a amostra está completa: uma pausa antes de o valor acrescentado entrar
+    estado.espera += dt; estado.acum = n;
+    if (estado.espera >= ESPERA) { avanca(estado, N); desenha(estado); }
+  } else {
+    estado.acum = Math.min(ext > 0 ? n : N, estado.acum + dt * velocidade());
+    const ate = Math.floor(estado.acum);
+    if (ate > estado.k) { avanca(estado, ate); desenha(estado); }
+  }
+  if (estado.k < N) quadro = requestAnimationFrame(quadroSeguinte);
+  else { quadro = null; $("pausa").disabled = true; }
+}
+function pausar() {
+  if (quadro) { pararQuadro(); $("pausa").textContent = "Continuar"; quadrosLista = -1; atualizaLista(estado); }
+  else if (estado && dados && estado.k < total()) continuar();
+}
+function passoAPasso() {
+  if (!estado || estado.k >= total()) { pararQuadro(); estado = preparaEstado(); limpaCartoes(); }
+  if (quadro) { pararQuadro(); $("pausa").textContent = "Continuar"; }
+  avanca(estado, estado.k + 1); estado.acum = Math.min(n, estado.k); estado.espera = ESPERA; quadrosLista = -1; desenha(estado);
+  $("pausa").disabled = estado.k >= total(); if (estado.k < total()) $("pausa").textContent = "Continuar";
+}
+
 atualizaPainel();
+atualizaVel();
+estado = preparaEstado(); desenha(estado);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (estado) desenha(estado); });
 iniciar();
 </script>
 </body>

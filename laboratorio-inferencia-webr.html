@@ -446,6 +446,7 @@ function desenhaDica(g, W, fonte, d) {
   const tw = g.measureText(d.texto).width + 14, th = fonte + 12;
   let x = d.x + 12, y = d.y - th - 8;
   if (x + tw > W - 4) x = d.x - tw - 12;
+  x = Math.max(4, Math.min(W - tw - 4, x));
   if (y < 4) y = d.y + 12;
   g.fillStyle = "rgba(255,255,255,0.96)"; g.strokeStyle = "#9aa7b8"; g.lineWidth = 1;
   g.beginPath(); g.roundRect(x, y, tw, th, 6); g.fill(); g.stroke();
