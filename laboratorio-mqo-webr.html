@@ -115,7 +115,7 @@ os mesmos pontos, com um quadrado para cada erro, e soma as áreas.</p>
   <div id="graficos"></div>
 </div>
 
-<details><summary>Ver o código R que está rodando (muda com os controles)</summary>
+<details><summary>Ver o código R que está rodando (muda com os parâmetros)</summary>
 <pre id="codigoview"></pre></details>
 
 <section class="box">
@@ -217,7 +217,7 @@ function atualizaPainel() {
   const a = parseFloat($("a").value), b = parseFloat($("b").value);
   $("av").textContent = fmt(a); $("bv").textContent = fmt(b);
   $("previsao").innerHTML = `<b>A sua reta:</b> y = ${fmt(a)} ${b < 0 ? "−" : "+"} ${fmt(Math.abs(b))} × x. Mexa nos ` +
-    `dois controles para encolher os quadrados. Quando a soma das áreas parar de cair, você chegou aonde o método chega.`;
+    `dois parâmetros da reta para encolher os quadrados. Quando a soma das áreas parar de cair, você chegou aonde o método chega.`;
   $("codigoview").textContent = codigoR();
 }
 function marcaDesatualizado() {
@@ -291,7 +291,7 @@ async function rodar() {
       let txt = `<b>A sua reta</b> deixa uma soma de áreas de <b>${fmt(r.somaSua)}</b>; a reta dos mínimos quadrados deixa ` +
         `<b>${fmt(r.somaMqo)}</b>, e é y = ${fmt(r.aMqo, 2)} ${r.bMqo < 0 ? "−" : "+"} ${fmt(Math.abs(r.bMqo), 2)} × x. ` +
         (perto ? `Você chegou ao mínimo: qualquer mexida daqui só aumenta a soma. `
-               : `Ainda dá para encolher os quadrados: mexa nos controles e veja a soma cair. `);
+               : `Ainda dá para encolher os quadrados: mexa nos parâmetros e veja a soma cair. `);
       txt += `<br><br><b>R² da sua reta: ${fmt(r.r2Sua, 2)}</b>; o da reta dos mínimos quadrados é ${fmt(r.r2Mqo, 2)}, o maior ` +
         `possível nestes pontos. O R² compara a soma da sua reta com a soma de uma reta horizontal na média de y: ` +
         (r.r2Sua < 0

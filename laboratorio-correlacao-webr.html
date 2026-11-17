@@ -161,7 +161,7 @@
   </div>
 </div>
 
-<details><summary>Ver o código R que está rodando (muda com os controles)</summary>
+<details><summary>Ver o código R que está rodando (muda com os parâmetros)</summary>
 <pre id="codigoview"></pre></details>
 
 <section class="box">
@@ -230,7 +230,7 @@ const p1chute = grupo("p1chutes", RS, null, v => fmt(v), () => {});
 function p1Desatualiza() {
   if (!p1Rodou) return;
   $("p1resultado").classList.add("desatualizado");
-  $("p1aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o resultado novo.";
+  $("p1aviso").textContent = "Você mudou um parâmetro. Aperte Rodar para ver o resultado novo.";
 }
 function codigoP1(r, n, teste) {
   return `set.seed(${seed})
@@ -308,7 +308,7 @@ let p2Rodou = false;
 function p2Desatualiza() {
   if (!p2Rodou) return;
   $("p2resultado").classList.add("desatualizado");
-  $("p2aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o resultado novo.";
+  $("p2aviso").textContent = "Você mudou um parâmetro. Aperte Rodar para ver o resultado novo.";
 }
 function p2Atualiza() {
   const b1 = p2b1.get(), b2 = p2b2.get(), dl = p2dl.get(), e = p2etapa.get();

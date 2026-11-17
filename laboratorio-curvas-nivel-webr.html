@@ -129,7 +129,7 @@
   </div>
 </div>
 
-<details><summary>Ver o código R que está rodando (muda com os controles)</summary>
+<details><summary>Ver o código R que está rodando (muda com os parâmetros)</summary>
 <pre id="codigoview"></pre></details>
 
 <section class="box">
@@ -257,7 +257,7 @@ function p1Atualiza() {
 function p1Desatualiza() {
   if (!p1Rodou) return;
   $("p1resultado").classList.add("desatualizado");
-  $("p1aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o desenho novo.";
+  $("p1aviso").textContent = "Você mudou um parâmetro. Aperte Rodar para ver o desenho novo.";
 }
 async function p1Rodar() {
   $("p1rodar").disabled = true; $("p1aviso").textContent = "";

@@ -113,7 +113,7 @@
 
 <details class="eq" id="detalhes"><summary>Para quem já viu as equações</summary><div id="detalhes_corpo"></div></details>
 
-<details><summary>Ver o código R que está rodando (muda com os controles)</summary>
+<details><summary>Ver o código R que está rodando (muda com os parâmetros)</summary>
 <pre id="codigoview"></pre></details>
 
 <section class="box">
@@ -191,7 +191,7 @@ titulos(sprintf("Dentro da escola: inclinação %.2f", coef(dentro)[2]), "Cada p
       `verdadeiro é 0,50. <b>No gráfico da esquerda:</b> a cor é o fator fixo; as escolas boas ficam no alto e à direita, e isso inclina a reta ` +
       `vermelha. <b>Na direita:</b> cada ponto é a mudança de uma escola de um ano para o outro; o fator fixo sumiu. ` +
       (v.rho > 0 ? `Mas o choque do ano aumentou tutoria e nota juntos, e a reta verde se afastou da azul.` : ``),
-    detalhes: `<p><span class="f">Y_it = 5 + 0,5·X_it + φ·α_i + ρ·w_it + e_it</span> e <span class="f">X_it = 8 + α_i + w_it + η_it</span>, com α_i o fator fixo da escola, w_it o choque do ano, φ a força do fator fixo e ρ o peso do choque (os dois controles acima).</p>
+    detalhes: `<p><span class="f">Y_it = 5 + 0,5·X_it + φ·α_i + ρ·w_it + e_it</span> e <span class="f">X_it = 8 + α_i + w_it + η_it</span>, com α_i o fator fixo da escola, w_it o choque do ano, φ a força do fator fixo e ρ o peso do choque (os dois parâmetros acima).</p>
       <p>Entre escolas: <span class="f">lm(Y ~ X)</span> com todas juntas. Efeitos fixos: <span class="f">lm(ΔY ~ ΔX)</span>, a regressão das variações; com muitos períodos, o equivalente é incluir um efeito fixo por escola. Na diferença, <span class="f">ΔY = 0,5·ΔX + ρ·Δw + Δe</span>; a condição é <span class="f">E(ρ·Δw + Δe | ΔX) = 0</span>, verdadeira só se ρ = 0, porque Δw entra em ΔX.</p>` },
 
   { id: "did", nome: "Diferenças em diferenças", resumo: "Descontar a tendência de um grupo que não foi afetado.",
@@ -235,7 +235,7 @@ titulos(sprintf("Cada ponto é uma escola; a dupla diferença é %.2f", dupla), 
       `deu <b>${fmt(r[1])}</b>, que carrega a subida geral; a dupla diferença deu <b>${fmt(r[2])}</b>; o efeito verdadeiro é ${fmt(v.tau)}. ` +
       `<b>No gráfico:</b> a dupla diferença é a distância entre o ponto "depois" da rede A e a linha pontilhada, que é a rede A subindo igual à B. ` +
       (v.dA !== 0 ? `Aqui a rede A tinha uma tendência própria, e a ferramenta errou exatamente nela.` : `A condição é que, sem a greve, A teria subido igual a B; na prática, confere-se se as duas andavam juntas antes.`),
-    detalhes: `<p>Rede B: <span class="f">nota = 20 + g·pós + e</span>. Rede A: <span class="f">nota = 28 + (g + δ_A + τ)·pós + e</span>, com g a subida geral, δ_A a tendência própria da rede A e τ o efeito da greve (os três controles acima).</p>
+    detalhes: `<p>Rede B: <span class="f">nota = 20 + g·pós + e</span>. Rede A: <span class="f">nota = 28 + (g + δ_A + τ)·pós + e</span>, com g a subida geral, δ_A a tendência própria da rede A e τ o efeito da greve (os três parâmetros acima).</p>
       <p>Diferenças em diferenças: <span class="f">[Ā_dep − Ā_ant] − [B̄_dep − B̄_ant]</span>, ou, em regressão, o coeficiente da interação em <span class="f">Y = a + b·A + c·pós + τ·(A × pós)</span>. A condição de tendências paralelas é <span class="f">E(ΔY sem greve | A) = E(ΔY | B)</span>, sobre as variações, não sobre os níveis; com δ_A ≠ 0 a estimativa é τ + δ_A.</p>` },
 ];
 
@@ -281,7 +281,7 @@ function atualizaPainel() {
 function marcaDesatualizado() {
   if (!rodou) return;
   $("resultado").classList.add("desatualizado");
-  $("aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o resultado novo.";
+  $("aviso").textContent = "Você mudou um parâmetro. Aperte Rodar para ver o resultado novo.";
 }
 PARTES.forEach((p, i) => {
   const b = document.createElement("button"); b.dataset.id = p.id;

@@ -113,7 +113,7 @@
 
 <details class="eq" id="detalhes"><summary>Para quem já viu as equações</summary><div id="detalhes_corpo"></div></details>
 
-<details><summary>Ver o código R que está rodando (muda com os controles)</summary>
+<details><summary>Ver o código R que está rodando (muda com os parâmetros)</summary>
 <pre id="codigoview"></pre></details>
 
 <section class="box">
@@ -192,7 +192,7 @@ titulos("Cada ponto é uma pessoa; em azul, quem ganhou a bolsa", "Os dois círc
       `verdadeiro é 0,50. A bolsa acrescentou <b>${fmt(r[2])}</b> ano de escolaridade em média, o que dá para conferir nos dados. ` +
       `<b>No gráfico:</b> a reta verde liga as médias dos dois grupos; o número que a ferramenta dá é exatamente a inclinação dessa reta. ` +
       (v.kappa > 0 ? `Aqui a bolsa também mexeu no salário por fora, e a ferramenta errou sem avisar: que a bolsa não mexa no salário por outro caminho é uma condição que não dá para conferir nos dados, só por argumento.` : ``),
-    detalhes: `<p><span class="f">X = 8 + π·Z_b + 2·hab + η</span> e <span class="f">Y = 5 + 0,5·X + 3·hab + κ·Z_b + e</span>, com Z_b a bolsa sorteada, π o empurrão da bolsa e κ o caminho por fora (os dois controles acima).</p>
+    detalhes: `<p><span class="f">X = 8 + π·Z_b + 2·hab + η</span> e <span class="f">Y = 5 + 0,5·X + 3·hab + κ·Z_b + e</span>, com Z_b a bolsa sorteada, π o empurrão da bolsa e κ o caminho por fora (os dois parâmetros acima).</p>
       <p>Variável instrumental em dois estágios: primeiro <span class="f">X = a₀ + π·Z_b</span>, guardando o X previsto; depois <span class="f">Y = a₁ + b·X̂</span>. Com um instrumento binário, isso é a conta de Wald, a inclinação da reta que liga as médias dos dois grupos. Condições: relevância, <span class="f">Cov(Z_b, X) ≠ 0</span> (testável), e exclusão, <span class="f">Cov(Z_b, u) = 0</span> (não testável); com κ ≠ 0 o termo κ·Z_b entra em u e a exclusão cai.</p>` },
 
 ];
@@ -239,7 +239,7 @@ function atualizaPainel() {
 function marcaDesatualizado() {
   if (!rodou) return;
   $("resultado").classList.add("desatualizado");
-  $("aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o resultado novo.";
+  $("aviso").textContent = "Você mudou um parâmetro. Aperte Rodar para ver o resultado novo.";
 }
 PARTES.forEach((p, i) => {
   const b = document.createElement("button"); b.dataset.id = p.id;

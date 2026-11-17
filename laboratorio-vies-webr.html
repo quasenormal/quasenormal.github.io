@@ -105,7 +105,7 @@ mais de escolaridade.</p>
   <div id="graficos"></div>
 </div>
 
-<details><summary>Ver o código R que está rodando (muda com os controles)</summary>
+<details><summary>Ver o código R que está rodando (muda com os parâmetros)</summary>
 <pre id="codigoview"></pre></details>
 
 <section class="box">
@@ -203,7 +203,7 @@ function atualizaPainel() {
 function marcaDesatualizado() {
   if (!rodou) return;
   $("resultado").classList.add("desatualizado");
-  $("aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o resultado novo.";
+  $("aviso").textContent = "Você mudou um parâmetro. Aperte Rodar para ver o resultado novo.";
 }
 $("rodar").addEventListener("click", rodar);
 

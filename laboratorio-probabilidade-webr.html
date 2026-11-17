@@ -128,7 +128,7 @@ quem tem a doença, com a chance que você escolheu, e aplica o exame a cada uma
   <div id="tabela"></div>
 </div>
 
-<details><summary>Ver o código R que está rodando (o código muda quando você muda os controles)</summary>
+<details><summary>Ver o código R que está rodando (o código muda quando você muda os parâmetros)</summary>
 <pre id="codigoview"></pre></details>
 
 <section class="box">
@@ -235,7 +235,7 @@ function atualizaPainel() {
 function marcaDesatualizado() {
   if (!rodou) return;
   $("resultado").classList.add("desatualizado");
-  $("aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o resultado novo.";
+  $("aviso").textContent = "Você mudou um parâmetro. Aperte Rodar para ver o resultado novo.";
 }
 $("rodar").addEventListener("click", rodar);
 $("repetir").addEventListener("click", () => { if (dados) anima(); });

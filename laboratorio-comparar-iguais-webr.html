@@ -111,7 +111,7 @@
 
 <details class="eq" id="detalhes"><summary>Para quem já viu as equações</summary><div id="detalhes_corpo"></div></details>
 
-<details><summary>Ver o código R que está rodando (muda com os controles)</summary>
+<details><summary>Ver o código R que está rodando (muda com os parâmetros)</summary>
 <pre id="codigoview"></pre></details>
 
 <section class="box">
@@ -196,7 +196,7 @@ titulos("Cada ponto é uma pessoa; a cor é a habilidade", "À esquerda, a inscr
       `no sorteio, <b>${fmt(r[1])}</b>; o efeito verdadeiro é ${fmt(v.tau)}. <b>No gráfico:</b> na inscrição voluntária, quem fez o treinamento tem ` +
       `habilidade média ${fmt(r[2])} acima de quem não fez (as cores mostram): os grupos já nasceram diferentes. No sorteio, os dois ` +
       `grupos têm a mesma mistura de cores, e a diferença de salário é só o treinamento.`,
-    detalhes: `<p>Salário: <span class="f">Y = 10 + τ·T + 3·Z + e</span>, com Z a habilidade, τ o efeito verdadeiro e, abaixo, γ o quanto os mais hábeis se inscrevem mais (os dois controles acima); η é ruído.</p>
+    detalhes: `<p>Salário: <span class="f">Y = 10 + τ·T + 3·Z + e</span>, com Z a habilidade, τ o efeito verdadeiro e, abaixo, γ o quanto os mais hábeis se inscrevem mais (os dois parâmetros acima); η é ruído.</p>
       <p>Inscrição voluntária: <span class="f">T = 1 se γ·Z + η &gt; 0</span>. Sorteio: <span class="f">T = cara ou coroa</span>.</p>
       <p>Os dois métodos estimam a mesma coisa, <span class="f">Y = a + b·T</span>; o que muda é como T foi gerado. A condição para a diferença de médias medir τ é <span class="f">E(u | T) = 0</span>, com u = 3Z + e. Na inscrição voluntária, T depende de Z, que está dentro de u, e a condição falha; no sorteio, T é independente de tudo e a condição vale por construção.</p>` },
 
@@ -233,7 +233,7 @@ titulos("Cada ponto é uma pessoa; a cor é a habilidade de verdade", "A inclina
     verifica: (r, v) => `<b>Previsto e observado:</b> a regressão que ignora a habilidade encontrou <b>${fmt(r[0])}</b>; a que inclui a nota do teste, <b>${fmt(r[1])}</b>; ` +
       `o efeito verdadeiro é 0,50. ` + (v.lambda === 0 ? `Com o teste perfeito, comparar pessoas de mesma nota é comparar pessoas de mesma habilidade, e o engano some.`
         : `Com o teste embaçado, parte da habilidade continua escondida, e o engano volta na proporção do que o teste não captura. Escolha um erro maior e veja a reta verde se aproximar da vermelha.`),
-    detalhes: `<p><span class="f">Y = 2 + 0,5·X + 1·Z + v</span>, <span class="f">Z = 0,5·X + ν</span>, e observa-se só <span class="f">Z* = Z + λ·ξ</span>, com λ o erro do teste (o controle acima) e ξ ruído.</p>
+    detalhes: `<p><span class="f">Y = 2 + 0,5·X + 1·Z + v</span>, <span class="f">Z = 0,5·X + ν</span>, e observa-se só <span class="f">Z* = Z + λ·ξ</span>, com λ o erro do teste (o parâmetro acima) e ξ ruído.</p>
       <p>Método ingênuo: <span class="f">lm(Y ~ X)</span>. Controles: <span class="f">lm(Y ~ X + Z*)</span>. A condição é <span class="f">E(u | X, Z*) = 0</span>; com erro de medida, u ainda contém (Z − Z*), que anda com X, e a condição vale só em parte: a estimativa fica entre a ingênua e a verdadeira.</p>` },
 
   { id: "rdd", nome: "Regressão descontínua", resumo: "Comparar quem ficou logo acima e logo abaixo de um corte.",
@@ -322,7 +322,7 @@ function atualizaPainel() {
 function marcaDesatualizado() {
   if (!rodou) return;
   $("resultado").classList.add("desatualizado");
-  $("aviso").textContent = "Você mudou um controle. Aperte Rodar para ver o resultado novo.";
+  $("aviso").textContent = "Você mudou um parâmetro. Aperte Rodar para ver o resultado novo.";
 }
 PARTES.forEach((p, i) => {
   const b = document.createElement("button"); b.dataset.id = p.id;

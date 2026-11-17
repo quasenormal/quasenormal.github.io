@@ -247,7 +247,7 @@ PARTES.forEach(P => {
     <div class="verifica" id="verifica_${P.id}"></div>
     <canvas class="anim" id="anim_${P.id}"></canvas>
     <details class="lista" id="lista_${P.id}"><summary>Ver a lista ${P.id === "cartas" ? "dos pares de cartas" : "das jogadas"}</summary><pre id="listatxt_${P.id}"></pre></details>
-    <details><summary>Ver o código R que está rodando (o código muda quando você muda os controles)</summary><pre id="codigo_${P.id}"></pre></details>`;
+    <details><summary>Ver o código R que está rodando (o código muda quando você muda os parâmetros)</summary><pre id="codigo_${P.id}"></pre></details>`;
   P.dados = null; P.estado = null; P.quadro = null; P.ultimo = 0; P.quadrosLista = 0;
   $("rodar_" + P.id).addEventListener("click", () => rodar(P));
   $("pausa_" + P.id).addEventListener("click", () => pausar(P));
