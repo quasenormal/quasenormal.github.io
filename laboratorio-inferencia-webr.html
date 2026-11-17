@@ -5,69 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Laboratório da Inferência — R no navegador</title>
 <meta name="description" content="Que confiança merece o coeficiente de uma regressão? Você conhece a verdade, faz uma pesquisa e depois outras 499 iguais, e vê quanto a inclinação muda de uma para outra: é o erro-padrão, de onde saem o intervalo de confiança e o p-valor. A página também mostra por que «significativo» não quer dizer «grande». Simulação com R rodando no navegador, inclusive no celular.">
-<style>
-  :root { color-scheme: light; --azul:#1a4f8b; --cinza:#f4f5f7; --borda:#d8dce2; --verde:#157347; --verm:#b02a37; }
-  * { box-sizing: border-box; }
-  body { background: #fff; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-         margin: 0; padding: 16px; max-width: 820px; margin-inline: auto;
-         color: #1c2430; line-height: 1.5; }
-  h1 { font-size: 1.3rem; color: var(--azul); margin-bottom: 4px; }
-  h2 { font-size: 1.02rem; color: var(--azul); margin: 22px 0 6px; }
-  .sub { color: #5a6573; font-size: .92rem; margin-top: 0; }
-  .chamada { border-left: 5px solid var(--azul); background: #eef3fa; padding: 12px 14px;
-             margin: 14px 0; font-size: 1.02rem; border-radius: 0 10px 10px 0; }
-  .chamada b { color: var(--azul); }
-  .chamada p { margin: 0; } .chamada p + p { margin-top: 8px; }
-  .nota { font-size: .92rem; color: #5a6573; margin: 8px 0; }
-  .ctl { font-size: .92rem; margin: 8px 0 4px; }
-  .opcoes { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
-  .opcoes button { border: 1px solid var(--borda); background: #fff; border-radius: 8px;
-                   padding: 9px 14px; font-size: 1rem; font-weight: 700; cursor: pointer;
-                   font-family: ui-monospace, Consolas, monospace; min-width: 64px; }
-  .opcoes button.texto { font-family: inherit; font-weight: 600; font-size: .9rem; }
-  .opcoes button.ativo { background: var(--azul); color: #fff; border-color: var(--azul); }
-  .veloc { font-size: .92rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
-  .veloc input { width: 170px; }
-  .veloc span { color: #5a6573; }
-  .previsao { font-size: .95rem; background: #fffbe8; border: 1px solid #e8ddb0;
-              border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
-  .botoes { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; align-items: center; }
-  .botoes button { border: 0; border-radius: 8px; padding: 12px 22px; font-size: 1rem;
-           font-weight: 600; cursor: pointer; }
-  .botoes button.principal { background: var(--azul); color: #fff; min-width: 140px; }
-  .botoes button.principal:disabled { background: #9fb3cb; cursor: wait; }
-  .botoes button.sec { background: #fff; color: var(--azul); border: 1px solid var(--azul); padding: 10px 16px; }
-  .botoes button.sec:disabled { color: #8a93a0; border-color: var(--borda); cursor: default; }
-  .aviso { font-size: .9rem; color: var(--verm); font-weight: 600; margin: 6px 0; min-height: 1.2em; }
-  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-  .card { border: 2px solid var(--borda); border-radius: 10px; padding: 10px 12px; }
-  .card h3 { margin: 0 0 4px; font-size: .9rem; }
-  .card .big { font-size: 1.7rem; font-weight: 800; font-family: ui-monospace, Consolas, monospace; }
-  .card .big small { font-size: .95rem; font-weight: 600; font-family: inherit; color: #5a6573; }
-  .card.centro { border-color: var(--verde); } .card.centro h3 { color: var(--verde); }
-  .card.espalha { border-color: var(--azul); } .card.espalha h3 { color: var(--azul); }
-  .card .nota { font-size: .8rem; color: #5a6573; margin: 0; }
-  .verifica { font-size: .92rem; margin-top: 8px; }
-  canvas { width: 100%; height: auto; border: 1px solid var(--borda); border-radius: 10px;
-           margin-top: 12px; background: #fff; display: block; }
-  .lista { margin-top: 6px; font-size: .88rem; }
-  .lista summary { cursor: pointer; color: var(--azul); text-align: right; }
-  .lista pre { max-height: 220px; overflow: auto; background: var(--cinza); color: #1c2430; border: 1px solid var(--borda);
-               border-radius: 8px; padding: 8px 10px; font-size: .82rem; white-space: pre-wrap; margin-top: 6px; }
-  details { margin-top: 12px; font-size: .88rem; }
-  details pre { background: #10151c; color: #d7e3f0; border-radius: 10px; padding: 12px;
-                font-size: .8rem; overflow-x: auto; white-space: pre-wrap; }
-  details.eq div { background: var(--cinza); border: 1px solid var(--borda); border-radius: 10px; padding: 8px 12px; font-size: .92rem; }
-  details.eq p { margin: 6px 0; }
-  .f { font-family: ui-monospace, Consolas, monospace; font-size: .9rem; white-space: nowrap; }
-  .box { background: var(--cinza); border: 1px solid var(--borda);
-         border-radius: 10px; padding: 12px; margin: 12px 0; font-size: .92rem; }
-  footer { color: #5a6573; font-size: .85rem; margin-top: 24px;
-           border-top: 1px solid var(--borda); padding-top: 12px; }
-  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="laboratorio.css">
 </head>
 <body>
+<header class="faixa"><div class="faixa-in">
+  <a class="marca" href="./">Quase Normal</a>
+  <span class="passo">Passo 11 de 15 · Econometria</span>
+  <nav class="prox"><a href="laboratorio-mqo-webr.html">&larr; Mínimos Quadrados</a><a href="laboratorio-vies-webr.html">Viés de Variável Omitida &rarr;</a></nav>
+</div></header>
+<div class="wrap">
 
 <h1>Laboratório da Inferência</h1>
 <p class="sub">Econometria. Esta página roda no navegador, inclusive no celular.</p>
@@ -86,8 +34,8 @@
 e a nota que tiraram. A nota de cada aluno é a soma de duas partes: a verdade (os pontos que as horas valem de fato) e um resto, que reúne tudo o mais de que a nota depende. A pesquisa ajusta a reta de mínimos quadrados e devolve a inclinação.</p>
 
 <h2>1. Escolha a verdade: quantos pontos vale uma hora de estudo?</h2>
-<div class="ctl">Esse número é o efeito verdadeiro: quanto a nota sobe, em média, a cada hora de estudo por semana.
-As pesquisas não sabem esse número; você sabe.</div>
+<div class="ctl">Esse número é o efeito verdadeiro: quantos pontos a nota sobe, em média, a cada hora de estudo por
+semana. As pesquisas não sabem esse número; você sabe.</div>
 <div class="opcoes" id="efs"></div>
 
 <h2>2. Escolha quantos alunos cada pesquisa entrevista</h2>
@@ -96,7 +44,7 @@ As pesquisas não sabem esse número; você sabe.</div>
 
 <h2>3. Escolha quanto a nota depende de outras coisas</h2>
 <div class="ctl">Além das horas de estudo, a nota depende de muita coisa que a pesquisa não mede. Aqui
-você escolhe o tamanho desse resto: o desvio-padrão da nota entre alunos com as mesmas horas.</div>
+você escolhe o tamanho desse resto: o desvio-padrão da nota, em pontos, entre alunos com as mesmas horas.</div>
 <div class="opcoes" id="rs"></div>
 
 <div class="previsao" id="previsao"></div>
@@ -115,15 +63,19 @@ você escolhe o tamanho desse resto: o desvio-padrão da nota entre alunos com a
   <div class="cards">
     <div class="card centro"><h3>A INCLINAÇÃO DA SUA PESQUISA</h3>
       <div class="big" id="res_sua">—</div>
+      <span class="chip" id="chip_sua"></span>
       <p class="nota" id="nota_sua"></p></div>
     <div class="card espalha"><h3>QUANTO AS INCLINAÇÕES SE ESPALHAM</h3>
       <div class="big" id="res_sd">—</div>
+      <span class="chip" id="chip_sd"></span>
       <p class="nota" id="nota_sd"></p></div>
     <div class="card espalha"><h3>INTERVALOS QUE CONTÊM O EFEITO VERDADEIRO</h3>
       <div class="big" id="res_cob">—</div>
+      <span class="chip" id="chip_cob"></span>
       <p class="nota" id="nota_cob"></p></div>
     <div class="card espalha"><h3 id="lbl_sig">PESQUISAS QUE DISSERAM «HÁ EFEITO»</h3>
       <div class="big" id="res_sig">—</div>
+      <span class="chip" id="chip_sig"></span>
       <p class="nota" id="nota_sig"></p></div>
   </div>
   <div class="verifica" id="verifica"></div>
@@ -150,9 +102,11 @@ pesquisa entrevista 5 alunos. Nas duas, o resto da nota tem desvio-padrão de 10
   <div class="cards">
     <div class="card espalha"><h3>PESQUISA A: 10.000 ALUNOS, EFEITO VERDADEIRO DE 0,1 PONTO</h3>
       <div class="big" id="res_a">—</div>
+      <span class="chip" id="chip_a"></span>
       <p class="nota" id="nota_a"></p></div>
     <div class="card espalha"><h3>PESQUISA B: 5 ALUNOS, EFEITO VERDADEIRO DE 2 PONTOS</h3>
       <div class="big" id="res_b">—</div>
+      <span class="chip" id="chip_b"></span>
       <p class="nota" id="nota_b"></p></div>
   </div>
   <div class="verifica" id="verifica2"></div>
@@ -188,11 +142,12 @@ pesquisa entrevista 5 alunos. Nas duas, o resto da nota tem desvio-padrão de 10
     <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
   </p>
 </footer>
+</div>
 
 <script type="module">
-const EFS = [{ v: 0, r: "nada (0)" }, { v: 0.5, r: "pouco (0,5 ponto)" }, { v: 2, r: "muito (2 pontos)" }];
+const EFS = [{ v: 0, r: "0" }, { v: 0.5, r: "0,5" }, { v: 2, r: "2" }];
 const NS = [20, 100, 1000];
-const RS = [{ v: 4, r: "pouco (4 pontos)" }, { v: 10, r: "muito (10 pontos)" }];
+const RS = [{ v: 4, r: "4" }, { v: 10, r: "10" }];
 const K = 500;                 // pesquisas
 const DURACAO = 6000;          // ms para mostrar as K pesquisas na velocidade normal
 const SDX = 15 / Math.sqrt(12);   // desvio-padrão das horas, espalhadas por igual entre 0 e 15
@@ -293,21 +248,23 @@ function atualizaVel() {
   const seg = DURACAO / 1000 / fator;
   $("vel_txt").textContent = `cerca de ${fmt(seg, seg < 10 && Math.abs(seg - Math.round(seg)) > 0.05 ? 1 : 0)} segundos para mostrar as ${K} pesquisas`;
 }
+function etiqueta(id, texto, cor) { const e = $(id); e.textContent = texto || ""; e.className = "chip" + (cor ? " " + cor : ""); }
 function limpaCartoes() {
   $("nota_sua").textContent = `O número está em pontos de nota por hora de estudo. O efeito verdadeiro é ${fmtEf(efeito)}.`;
   $("res_sua").textContent = "—"; $("res_sd").textContent = "—"; $("res_cob").textContent = "—"; $("res_sig").textContent = "—";
+  for (const c of ["chip_sua", "chip_sd", "chip_cob", "chip_sig"]) etiqueta(c, "");
 }
 // um controle mudou: limpa as pesquisas anteriores e mostra só a teoria nova
 function reinicia() {
   pararQuadro();
-  dados = null;
+  dados = null; dica1 = dica2 = null;
   limpaCartoes();
   $("verifica").innerHTML = ""; $("aviso").textContent = "";
   $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true; $("pausa").textContent = "Pausar";
   estado = preparaEstado(); desenha(estado);
 }
 EFS.forEach(o => {
-  const b = document.createElement("button"); b.textContent = o.r; b.dataset.v = o.v; b.classList.add("texto");
+  const b = document.createElement("button"); b.textContent = o.r; b.dataset.v = o.v;
   b.addEventListener("click", () => { efeito = o.v; atualizaPainel(); reinicia(); });
   $("efs").appendChild(b);
 });
@@ -317,7 +274,7 @@ NS.forEach(v => {
   $("ns").appendChild(b);
 });
 RS.forEach(o => {
-  const b = document.createElement("button"); b.textContent = o.r; b.dataset.v = o.v; b.classList.add("texto");
+  const b = document.createElement("button"); b.textContent = o.r; b.dataset.v = o.v;
   b.addEventListener("click", () => { ruido = o.v; atualizaPainel(); reinicia(); });
   $("rs").appendChild(b);
 });
@@ -427,6 +384,17 @@ function avanca(st, ate) {
     $("res_sd").textContent = st.k > 1 ? fmt(Math.sqrt(Math.max(0, vr))) : "—";
     $("res_cob").textContent = `${st.cob} de ${st.k}`;
     $("res_sig").textContent = `${st.sig} de ${st.k}`;
+    // a palavra de veredito: a da sua pesquisa desde o começo, as outras quando as 500 terminam
+    const p1 = dados.p[0] < 0.05;
+    if (efeito === 0) etiqueta("chip_sua", p1 ? "disse «há efeito» e errou" : "não afirmou nada, e acertou", p1 ? "verm" : "verde");
+    else etiqueta("chip_sua", p1 ? "disse «há efeito» e acertou" : "não afirmou nada: deixou passar", p1 ? "verde" : "ambar");
+    if (st.k === K) {
+      const se = seTeo(), sd = Math.sqrt(Math.max(0, vr)), cob = st.cob / K, sig = st.sig / K;
+      etiqueta("chip_sd", Math.abs(sd - se) / se <= 0.15 ? "bate com o erro-padrão" : "longe do erro-padrão", Math.abs(sd - se) / se <= 0.15 ? "verde" : "ambar");
+      etiqueta("chip_cob", cob >= 0.92 && cob <= 0.98 ? `${pct(cob)}, como a teoria previa` : `${pct(cob)}, longe dos 95% previstos`, cob >= 0.92 && cob <= 0.98 ? "verde" : "ambar");
+      if (efeito === 0) etiqueta("chip_sig", sig <= 0.08 ? `${pct(sig)}, como a teoria previa` : `${pct(sig)}, acima dos 5% previstos`, sig <= 0.08 ? "verde" : "ambar");
+      else etiqueta("chip_sig", `poder do teste: ${pct(sig)}`, "azul");
+    }
   }
 }
 function ticksBonitos(a, b, alvo = 5) {
@@ -435,7 +403,7 @@ function ticksBonitos(a, b, alvo = 5) {
   const out = []; for (let t = Math.ceil(a / passo - 1e-9) * passo; t <= b + 1e-9; t += passo) out.push(Math.round(t / passo) * passo);
   return out;
 }
-const FONTE = '-apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+const FONTE = '"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 function preparaCanvas(id, razao, minH = 0) {
   const cv = $(id);
   const dpr = window.devicePixelRatio || 1;
@@ -464,13 +432,52 @@ function cabecalho(c, titulo, leitura) {
   ll.forEach((l, i) => g.fillText(l, W / 2, y + 15 * i));
   return y + 15 * (ll.length - 1) + 12;
 }
-const AZUL = "#1a4f8b", AZULCLARO = "#4b6ea9", VERMELHO = "#d62828";
+const AZUL = "#1a4f8b", AZULCLARO = "#4b6ea9", VERMELHO = "#d62828", GRADE = "#e9edf2";
 function desenha(st) {
-  desenhaLeque(st);
-  desenhaHistograma(st);
+  desenhaLeque(st, dica1);
+  desenhaHistograma(st, dica2);
   atualizaLista(st);
 }
-function desenhaLeque(st) {
+// ---------- o valor ao tocar ou passar o mouse ----------
+let layout1 = null, layout2 = null, dica1 = null, dica2 = null;
+function desenhaDica(g, W, fonte, d) {
+  if (!d) return;
+  g.font = `600 ${fonte}px ${FONTE}`;
+  const tw = g.measureText(d.texto).width + 14, th = fonte + 12;
+  let x = d.x + 12, y = d.y - th - 8;
+  if (x + tw > W - 4) x = d.x - tw - 12;
+  if (y < 4) y = d.y + 12;
+  g.fillStyle = "rgba(255,255,255,0.96)"; g.strokeStyle = "#9aa7b8"; g.lineWidth = 1;
+  g.beginPath(); g.roundRect(x, y, tw, th, 6); g.fill(); g.stroke();
+  g.fillStyle = "#1b2330"; g.textAlign = "left"; g.fillText(d.texto, x + 7, y + th - 8);
+  g.beginPath(); g.arc(d.x, d.y, 3.5, 0, 2 * Math.PI); g.fill();
+}
+function achaPonto(x, y) {
+  if (!dados || !layout1 || !estado || estado.k === 0) return null;
+  const { sx, sy } = layout1; let melhor = null, dm = 144;
+  for (let i = 0; i < n; i++) { const dx = sx(dados.horas[i]) - x, dy = sy(dados.nota[i]) - y, d2 = dx * dx + dy * dy; if (d2 < dm) { dm = d2; melhor = i; } }
+  if (melhor === null) return null;
+  return { x: sx(dados.horas[melhor]), y: sy(dados.nota[melhor]), texto: `${fmt(dados.horas[melhor], 1)} h por semana, nota ${fmt(dados.nota[melhor], 0)}` };
+}
+function achaBarra(x, y) {
+  if (!dados || !layout2 || !estado || estado.k === 0) return null;
+  const { sx, sy, P, st } = layout2;
+  if (x < P.x0 || x > P.x1 || y < P.y0 || y > P.y1) return null;
+  const i = Math.floor((x - P.x0) / (P.x1 - P.x0) * st.nb);
+  if (i < 0 || i >= st.nb) return null;
+  const l = st.xa + i * st.largura, c = st.contagens[i];
+  return { x: sx(l + st.largura / 2), y: sy(c), texto: `de ${fmt(l)} a ${fmt(l + st.largura)}: ${c} ${c === 1 ? "pesquisa" : "pesquisas"}` };
+}
+function ligaDica(id, acha, poe) {
+  const cv = $(id);
+  const trata = e => { const r = cv.getBoundingClientRect(); poe(acha(e.clientX - r.left, e.clientY - r.top)); };
+  cv.addEventListener("pointermove", trata);
+  cv.addEventListener("pointerdown", trata);
+  cv.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") poe(null); });   // no celular, o toque deixa o valor na tela
+}
+ligaDica("anim1", achaPonto, d => { if ((d && d.texto) !== (dica1 && dica1.texto)) { dica1 = d; if (estado) desenhaLeque(estado, dica1); } });
+ligaDica("anim2", achaBarra, d => { if ((d && d.texto) !== (dica2 && dica2.texto)) { dica2 = d; if (estado) desenhaHistograma(estado, dica2); } });
+function desenhaLeque(st, dica) {
   const c = preparaCanvas("anim1", 0.62, 270), { g, W, H, fonte } = c;
   const y0 = cabecalho(c,
     st.k === 0 ? `A verdade: cada hora de estudo vale ${pontos(efeito)} na nota` : `${st.k} de ${K} pesquisas: cada reta azul é a inclinação que uma pesquisa encontrou`,
@@ -480,6 +487,12 @@ function desenhaLeque(st) {
   const ya = Math.max(0, 60 - 7.5 * efeito - 2.6 * ruido), yb = Math.min(100, 60 + 7.5 * efeito + 2.6 * ruido);
   const sx = v => P.x0 + v / 15 * (P.x1 - P.x0);
   const sy = v => P.y1 - (v - ya) / (yb - ya) * (P.y1 - P.y0);
+  layout1 = { sx, sy, P };
+  // grade leve
+  const yt = ticksBonitos(ya, yb, 4);
+  g.strokeStyle = GRADE; g.lineWidth = 1;
+  for (const t of yt) { if (t < ya || t > yb) continue; g.beginPath(); g.moveTo(P.x0, sy(t)); g.lineTo(P.x1, sy(t)); g.stroke(); }
+  for (const t of [5, 10]) { g.beginPath(); g.moveTo(sx(t), P.y0); g.lineTo(sx(t), P.y1); g.stroke(); }
   g.save(); g.beginPath(); g.rect(P.x0, P.y0, P.x1 - P.x0, P.y1 - P.y0); g.clip();
   // os alunos da sua pesquisa
   if (st.k > 0) {
@@ -504,23 +517,30 @@ function desenhaLeque(st) {
   for (const t of [0, 5, 10, 15]) { g.beginPath(); g.moveTo(sx(t), P.y1); g.lineTo(sx(t), P.y1 + 4); g.stroke(); g.fillText(String(t), sx(t), P.y1 + fonte + 4); }
   g.fillText("horas de estudo por semana", (P.x0 + P.x1) / 2, H - 6);
   g.textAlign = "right";
-  for (const t of ticksBonitos(ya, yb, 4)) { if (t < ya || t > yb) continue; g.beginPath(); g.moveTo(P.x0 - 4, sy(t)); g.lineTo(P.x0, sy(t)); g.stroke(); g.fillText(String(Math.round(t)), P.x0 - 6, sy(t) + 4); }
+  for (const t of yt) { if (t < ya || t > yb) continue; g.beginPath(); g.moveTo(P.x0 - 4, sy(t)); g.lineTo(P.x0, sy(t)); g.stroke(); g.fillText(String(Math.round(t)), P.x0 - 6, sy(t) + 4); }
   g.textAlign = "left"; g.fillText("nota", P.x0 + 4, P.y0 + fonte);
+  desenhaDica(g, W, fonte, dica);
 }
-function desenhaHistograma(st) {
+function desenhaHistograma(st, dica) {
   const c = preparaCanvas("anim2", 0.5, 230), { g, W, H, fonte } = c;
   const se = seTeo();
   const y0 = cabecalho(c,
     st.k === 0 ? `Onde a teoria diz que as inclinações das ${K} pesquisas vão cair` : `As inclinações das ${st.k} pesquisas feitas até agora`,
     st.k === 0 ? `A curva vermelha é a previsão. A linha vermelha tracejada, na vertical, marca o efeito verdadeiro, ${fmtEf(efeito)}.`
                : `Cada barra conta quantas pesquisas acharam uma inclinação naquela faixa. A curva vermelha é a previsão, e o traço azul é o intervalo de 95% da sua pesquisa. O ponto vermelho na base marca a última pesquisa feita.`);
-  const P = { x0: 14, x1: W - 14, y0, y1: H - 36 };
+  const P = { x0: 36, x1: W - 14, y0, y1: H - 36 };
   const sx = v => P.x0 + (v - st.xa) / (st.xb - st.xa) * (P.x1 - P.x0);
   // a curva teórica, em número de pesquisas por barra
   const dens = x => K * st.largura * Math.exp(-0.5 * ((x - efeito) / se) ** 2) / (se * Math.sqrt(2 * Math.PI));
   let ymax = dens(efeito) * 1.3;
   for (let i = 0; i < st.nb; i++) if (st.contagens[i] > ymax) ymax = st.contagens[i];
   const sy = v => P.y1 - v / ymax * (P.y1 - P.y0 - 14);
+  layout2 = { sx, sy, P, st };
+  // grade leve, com a contagem de pesquisas à esquerda
+  const yt = ticksBonitos(0, ymax, 4);
+  g.font = `${fonte}px ${FONTE}`; g.textAlign = "right"; g.fillStyle = "#555";
+  for (const t of yt) { if (t <= 0 || t > ymax) continue; g.strokeStyle = GRADE; g.lineWidth = 1; g.beginPath(); g.moveTo(P.x0, sy(t)); g.lineTo(P.x1, sy(t)); g.stroke(); g.fillText(String(t), P.x0 - 5, sy(t) + 4); }
+  g.textAlign = "left"; g.fillText("pesquisas", P.x0 + 4, P.y0 + fonte);
   // barras
   g.fillStyle = AZULCLARO;
   for (let i = 0; i < st.nb; i++) {
@@ -548,6 +568,7 @@ function desenhaHistograma(st) {
   g.fillStyle = "#333"; g.font = `${fonte}px ${FONTE}`; g.textAlign = "center";
   for (const t of ticksBonitos(st.xa, st.xb, 6)) { if (t < st.xa || t > st.xb) continue; g.beginPath(); g.moveTo(sx(t), P.y1); g.lineTo(sx(t), P.y1 + 4); g.stroke(); g.fillText(fmt(t, se < 0.05 ? 2 : 1), sx(t), P.y1 + fonte + 4); }
   g.fillText("inclinação encontrada (pontos de nota por hora de estudo)", (P.x0 + P.x1) / 2, H - 6);
+  desenhaDica(g, W, fonte, dica);
 }
 let quadrosLista = 0;
 function atualizaLista(st) {
@@ -617,6 +638,8 @@ async function rodar2() {
       $("nota_a").textContent = `O número está em pontos de nota por hora de estudo. O intervalo de 95% vai de ${fmt(A.l)} a ${fmt(A.u)}, com ${fmtP(A.p)}. A pesquisa diz: ${diz(A)}.`;
       $("res_b").textContent = fmt(B.b);
       $("nota_b").textContent = `O número está em pontos de nota por hora de estudo. O intervalo de 95% vai de ${fmt(B.l)} a ${fmt(B.u)}, com ${fmtP(B.p)}. A pesquisa diz: ${diz(B)}.`;
+      etiqueta("chip_a", A.p < 0.05 ? "significativo, e minúsculo" : "desta vez não afirmou", A.p < 0.05 ? "verde" : "ambar");
+      etiqueta("chip_b", B.p < 0.05 ? "significativo, mas impreciso" : "grande, mas não afirma nada", "ambar");
       $("verifica2").innerHTML = `<b>O que aconteceu:</b> o número da pesquisa A é preciso e pequeno. O intervalo vai de ${fmt(A.l)} a ${fmt(A.u)}` +
         (A.p < 0.05 ? `, todo longe de zero, e por isso ela diz «há efeito» (${fmtP(A.p)}). Mas o efeito é de um ponto a cada 10 horas de estudo.`
                     : `; desta vez ele encostou no zero (${fmtP(A.p)}), o que é raro com 10.000 alunos. Aperte o botão de novo para sortear outras duas pesquisas.`) +
@@ -667,6 +690,7 @@ atualizaPainel();
 atualizaVel();
 estado = preparaEstado(); desenha(estado);
 desenhaDois(null);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (estado) desenha(estado); desenhaDois(dois); });   // redesenha com a fonte carregada
 iniciar();
 </script>
 </body>

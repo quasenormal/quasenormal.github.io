@@ -67,8 +67,17 @@
            border-top: 1px solid var(--borda); padding-top: 12px; }
   @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="laboratorio.css">
 </head>
 <body>
+<header class="faixa"><div class="faixa-in">
+  <a class="marca" href="./">Quase Normal</a>
+  <span class="passo">Passo 5 de 15 · Estatística</span>
+  <nav class="prox"><a href="laboratorio-descritiva-webr.html">&larr; Média e mediana</a><a href="laboratorio-tcl-webr.html">Teorema Central do Limite &rarr;</a></nav>
+</div></header>
+<div class="wrap">
 
 <h1>Laboratório da Lei dos Grandes Números</h1>
 <p class="sub">Estatística. Esta página roda no navegador, inclusive no celular.</p>
@@ -96,9 +105,12 @@ média a cada valor novo. Mude a população e o n e veja o que acontece.</p>
 
 <div class="botoes">
   <button id="rodar" disabled>carregando o R…</button>
+  <button id="pausa" class="sec" disabled>Pausar</button>
   <button id="passo" class="sec" disabled>Um valor de cada vez</button>
   <button id="repetir" class="sec" disabled>Rever o sorteio</button>
 </div>
+<div class="veloc"><label for="vel">Velocidade do sorteio:</label>
+  <input type="range" id="vel" min="-2" max="2" step="1" value="0"> <span id="vel_txt"></span></div>
 <div id="aviso"></div>
 
 <div id="resultado">
@@ -113,6 +125,7 @@ média a cada valor novo. Mude a população e o n e veja o que acontece.</p>
   <div id="verifica"></div>
   <div id="graficos"></div>
   <canvas id="anim" class="escondido"></canvas>
+  <details class="lista" id="lista"><summary>Ver a lista dos valores sorteados</summary><pre id="lista_txt"></pre></details>
 </div>
 
 <details><summary>Ver o código R que está rodando (muda com os parâmetros)</summary>
@@ -145,6 +158,7 @@ média a cada valor novo. Mude a população e o n e veja o que acontece.</p>
     <a href="https://github.com/quasenormal/quasenormal.github.io/blob/main/LICENSE">Detalhes</a>.
   </p>
 </footer>
+</div>
 
 <script type="module">
 // Cada população: gerador em R (m = quantos valores), média e desvio-padrão teóricos,
@@ -264,12 +278,15 @@ POPS.forEach((p, i) => {
 NS.forEach(v => {
   const b = document.createElement("button");
   b.textContent = fmtInt(v); b.dataset.v = v;
-  b.addEventListener("click", () => { n = v; atualizaPainel(); marcaDesatualizado(); });
+  b.addEventListener("click", () => { n = v; atualizaPainel(); atualizaVel(); marcaDesatualizado(); });
   $("ns").appendChild(b);
 });
 $("rodar").addEventListener("click", () => rodar());
 $("repetir").addEventListener("click", () => { if (dados) anima(dados, popAtual, n, false); });
 $("passo").addEventListener("click", () => { if (dados) passoAPasso(); });
+$("pausa").addEventListener("click", pausar);
+$("vel").addEventListener("input", () => { fator = Math.pow(2, parseInt($("vel").value)); atualizaVel(); });
+$("lista").addEventListener("toggle", () => { quadrosLista = -1; if (estado) atualizaLista(estado); else $("lista_txt").textContent = "Nenhum valor foi sorteado ainda. Aperte Rodar para começar."; });
 
 // ---------- webR ----------
 let webR, shelter;
@@ -297,7 +314,7 @@ async function rodar() {
   seed = Math.floor(Math.random() * 100000);
   atualizaPainel();
   $("rodar").disabled = true; $("rodar").textContent = "sorteando…";
-  $("repetir").disabled = true; $("passo").disabled = true;
+  $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true;
   $("aviso").textContent = "";
   $("resultado").classList.remove("desatualizado");
   $("graficos").innerHTML = "";
@@ -374,31 +391,41 @@ function preparaEstado(xs, pop, n) {
     for (let i = 0; i < n; i++) { if (medias[i] < lo) lo = medias[i]; if (medias[i] > hi) hi = medias[i]; }
     const m = 0.1 * (hi - lo || 1); ymin = lo - m; ymax = hi + m;
   }
-  return { xs, medias, n, pop, k: 0, a, b, nb, largura, ymin, ymax, contagens: new Int32Array(nb) };
+  return { xs, medias, n, pop, k: 0, acum: 0, a, b, nb, largura, ymin, ymax, contagens: new Int32Array(nb) };
 }
 
-function desenha(st) {
+const FONTE = '"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+const GRADE = "#e9edf2";
+let layout = null, dica = null;
+function quebra(g, texto, largura) {
+  const linhas = []; let atual = "";
+  for (const pal of texto.split(" ")) { const tent = atual ? atual + " " + pal : pal; if (g.measureText(tent).width > largura && atual) { linhas.push(atual); atual = pal; } else atual = tent; }
+  linhas.push(atual);
+  return linhas;
+}
+function desenha(st, d = dica) {
   const cv = $("anim");
   const dpr = window.devicePixelRatio || 1;
-  const W = cv.clientWidth || 700, H = Math.round(W * 0.95);
+  const W = cv.clientWidth || 700, H = Math.max(520, Math.round(W * 0.95));   // altura mínima para o celular
   if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   cv.style.height = H + "px";
   const g = cv.getContext("2d");
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.clearRect(0, 0, W, H);
   const fonte = Math.max(11, Math.round(W / 55));
-  g.font = `${fonte}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
+  g.font = `${fonte}px ${FONTE}`;
   const { pop, k, n } = st;
   const azul = "#1a4f8b", vermelho = "#d62828";
 
   // ---- painel 1: histograma dos k primeiros valores ----
   const p1 = { x0: 14, x1: W - 14, y0: 48, y1: Math.round(H * 0.45) };
   g.fillStyle = "#1c2430"; g.textAlign = "center";
-  g.font = `bold ${fonte + 2}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
-  g.fillText(k === 0 ? `A amostra crescendo: ainda nenhum valor` :
-             `A amostra crescendo: ${fmtInt(k)} de ${fmtInt(n)} valores sorteados`, W / 2, 22);
-  g.font = `${fonte}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
-  g.fillStyle = "#555"; g.fillText("Cada valor novo entra na barra do seu lugar", W / 2, 40);
+  g.font = `bold ${fonte + 2}px ${FONTE}`;
+  const t1 = quebra(g, k === 0 ? `A amostra crescendo: ainda nenhum valor` : `A amostra crescendo: ${fmtInt(k)} de ${fmtInt(n)} valores sorteados`, W - 16);
+  t1.forEach((l, i) => g.fillText(l, W / 2, 22 + 17 * i));
+  g.font = `${fonte}px ${FONTE}`;
+  g.fillStyle = "#555"; g.fillText("Cada valor novo entra na barra do seu lugar", W / 2, 40 + 17 * (t1.length - 1));
+  p1.y0 = 48 + 17 * (t1.length - 1);
   const sx1 = v => p1.x0 + (v - st.a) / (st.b - st.a) * (p1.x1 - p1.x0);
   let maxc = 1; for (let i = 0; i < st.nb; i++) if (st.contagens[i] > maxc) maxc = st.contagens[i];
   const alt = p1.y1 - p1.y0 - 10;
@@ -429,16 +456,27 @@ function desenha(st) {
   if (pop.mu !== null) { g.strokeStyle = vermelho; g.setLineDash([6, 4]); g.lineWidth = 2; g.beginPath(); g.moveTo(sx1(pop.mu), p1.y0); g.lineTo(sx1(pop.mu), p1.y1); g.stroke(); g.setLineDash([]); }
 
   // ---- painel 2: a média dos k primeiros valores ----
-  const p2 = { x0: 50, x1: W - 14, y0: p1.y1 + 58, y1: H - 34 };
-  g.fillStyle = "#1c2430"; g.textAlign = "center";
-  g.font = `bold ${fonte + 2}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
-  g.fillText(k === 0 ? "A média dos valores já sorteados" : `A média dos ${fmtInt(k)} valores já sorteados: ${fmt(st.medias[k - 1])}`, W / 2, p1.y1 + 32);
-  g.font = `${fonte}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
-  g.fillStyle = "#555"; g.fillText("Recalculada a cada valor novo; a linha vermelha é a média da população", W / 2, p1.y1 + 50);
   const logx = n > 100;
+  g.font = `${fonte}px ${FONTE}`;
+  const rotuloX = quebra(g, "quantos valores já saíram (k)" + (logx ? ", em escala logarítmica: cada marca é 10 vezes a anterior" : ""), W - 16);
+  const p2 = { x0: 50, x1: W - 14, y0: p1.y1 + 58, y1: H - 10 - fonte - 15 * rotuloX.length };
+  g.fillStyle = "#1c2430"; g.textAlign = "center";
+  g.font = `bold ${fonte + 2}px ${FONTE}`;
+  const t2 = quebra(g, k === 0 ? "A média dos valores já sorteados" : `A média dos ${fmtInt(k)} valores já sorteados: ${fmt(st.medias[k - 1])}`, W - 16);
+  t2.forEach((l, i) => g.fillText(l, W / 2, p1.y1 + 32 + 17 * i));
+  g.font = `${fonte}px ${FONTE}`;
+  g.fillStyle = "#555";
+  const l2 = quebra(g, "Recalculada a cada valor novo; a linha vermelha é a média da população", W - 16);
+  l2.forEach((l, i) => g.fillText(l, W / 2, p1.y1 + 50 + 17 * (t2.length - 1) + 15 * i));
+  p2.y0 = p1.y1 + 58 + 17 * (t2.length - 1) + 15 * (l2.length - 1);
   const sx2 = kk => logx ? p2.x0 + Math.log10(kk) / Math.log10(n) * (p2.x1 - p2.x0)
                          : p2.x0 + (kk - 1) / Math.max(1, n - 1) * (p2.x1 - p2.x0);
   const sy2 = v => p2.y1 - (v - st.ymin) / (st.ymax - st.ymin) * (p2.y1 - p2.y0);
+  layout = { sx1, sx2, sy2, p1, p2, st, logx };
+  // grade leve
+  g.strokeStyle = GRADE; g.lineWidth = 1;
+  for (const t of ticksBonitos(st.ymin, st.ymax)) { if (t < st.ymin || t > st.ymax) continue; g.beginPath(); g.moveTo(p2.x0, sy2(t)); g.lineTo(p2.x1, sy2(t)); g.stroke(); }
+  for (const t of (logx ? [10, 100, 1000, 10000] : ticksBonitos(1, n)).filter(t => t > 1 && t <= n)) { g.beginPath(); g.moveTo(sx2(t), p2.y0); g.lineTo(sx2(t), p2.y1); g.stroke(); }
   // eixos
   g.strokeStyle = "#333"; g.lineWidth = 1;
   g.beginPath(); g.moveTo(p2.x0, p2.y0); g.lineTo(p2.x0, p2.y1); g.lineTo(p2.x1, p2.y1); g.stroke();
@@ -446,7 +484,7 @@ function desenha(st) {
   const ticksk = logx ? [1, 10, 100, 1000, 10000].filter(t => t <= n) : ticksBonitos(1, n).filter(t => t >= 1);
   g.textAlign = "center";
   for (const t of ticksk) { g.beginPath(); g.moveTo(sx2(t), p2.y1); g.lineTo(sx2(t), p2.y1 + 4); g.stroke(); g.fillText(fmtInt(t), sx2(t), p2.y1 + fonte + 4); }
-  g.fillText("quantos valores já saíram (k)" + (logx ? ", em escala logarítmica: cada marca é 10 vezes a anterior" : ""), (p2.x0 + p2.x1) / 2, H - 6);
+  rotuloX.forEach((l, i) => g.fillText(l, W / 2, p2.y1 + fonte + 4 + 15 * (i + 1)));
   g.textAlign = "right";
   for (const t of ticksBonitos(st.ymin, st.ymax)) { if (t < st.ymin || t > st.ymax) continue; g.beginPath(); g.moveTo(p2.x0 - 4, sy2(t)); g.lineTo(p2.x0, sy2(t)); g.stroke(); g.fillText(fmtTick(t), p2.x0 - 6, sy2(t) + 4); }
   // média da população
@@ -463,7 +501,50 @@ function desenha(st) {
     g.lineTo(xl, yl); g.stroke();
     g.fillStyle = azul; g.beginPath(); g.arc(xl, yl, 5, 0, 2 * Math.PI); g.fill();
   }
+  desenhaDica(g, W, fonte, d);
+  atualizaLista(st);
 }
+// ---------- o valor ao tocar ou passar o mouse ----------
+function desenhaDica(g, W, fonte, d) {
+  if (!d) return;
+  g.font = `600 ${fonte}px ${FONTE}`;
+  const tw = g.measureText(d.texto).width + 14, th = fonte + 12;
+  let x = d.x + 12, y = d.y - th - 8;
+  if (x + tw > W - 4) x = d.x - tw - 12;
+  if (y < 4) y = d.y + 12;
+  g.fillStyle = "rgba(255,255,255,0.96)"; g.strokeStyle = "#9aa7b8"; g.lineWidth = 1;
+  g.beginPath(); g.roundRect(x, y, tw, th, 6); g.fill(); g.stroke();
+  g.fillStyle = "#1b2330"; g.textAlign = "left"; g.fillText(d.texto, x + 7, y + th - 8);
+  g.beginPath(); g.arc(d.x, d.y, 3.5, 0, 2 * Math.PI); g.fill();
+}
+function achaDica(x, y) {
+  if (!layout || !estado || estado.k === 0) return null;
+  const { sx1, sx2, sy2, p1, p2, st, logx } = layout;
+  if (y >= p1.y0 && y <= p1.y1 + 4 && x >= p1.x0 && x <= p1.x1) {           // uma barra do histograma
+    const i = Math.min(st.nb - 1, Math.max(0, Math.floor((x - p1.x0) / (p1.x1 - p1.x0) * st.nb)));
+    const c = st.contagens[i];
+    if (st.pop.discreta) { const v = i === 0 ? 0 : 1; return { x: sx1(v), y: p1.y1 - 8, texto: `valor ${v}: ${fmtInt(c)} ${c === 1 ? "vez" : "vezes"}` }; }
+    const l = st.a + i * st.largura;
+    return { x: sx1(l + st.largura / 2), y: p1.y1 - 8, texto: `de ${fmtTick(l)} a ${fmtTick(l + st.largura)}: ${fmtInt(c)} ${c === 1 ? "valor" : "valores"}` };
+  }
+  if (y >= p2.y0 - 4 && y <= p2.y1 + 4 && x >= p2.x0 && x <= p2.x1) {       // um ponto da trajetória da média
+    const f = (x - p2.x0) / (p2.x1 - p2.x0);
+    let kk = logx ? Math.round(Math.pow(10, f * Math.log10(st.n))) : Math.round(1 + f * Math.max(1, st.n - 1));
+    kk = Math.min(estado.k, Math.max(1, kk));
+    const m = st.medias[kk - 1];
+    return { x: sx2(kk), y: Math.min(p2.y1 + 2, Math.max(p2.y0 - 2, sy2(m))), texto: `após ${fmtInt(kk)} ${kk === 1 ? "valor" : "valores"}: média ${fmt(m)}` };
+  }
+  return null;
+}
+window.addEventListener("resize", () => { if (estado) desenha(estado); });
+(() => {
+  const cv = $("anim");
+  const poe = d => { if ((d && d.texto) !== (dica && dica.texto)) { dica = d; if (estado) desenha(estado, dica); } };
+  const trata = e => { const r = cv.getBoundingClientRect(); poe(achaDica(e.clientX - r.left, e.clientY - r.top)); };
+  cv.addEventListener("pointermove", trata);
+  cv.addEventListener("pointerdown", trata);
+  cv.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") poe(null); });   // no celular, o toque deixa o valor na tela
+})();
 function ticksBonitos(a, b) {
   const bruto = (b - a) / 5, pot = Math.pow(10, Math.floor(Math.log10(bruto)));
   const m = bruto / pot, passo = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * pot;
@@ -480,29 +561,55 @@ function avanca(st, ate) {
   }
 }
 
+// ---------- o motor: anda por velocidade (valores por segundo), com pausa ----------
+const DURACAO = { 10: 3000, 100: 5000, 1000: 7000, 10000: 10000 };   // ms na velocidade normal
+let fator = 1, ultimo = 0, quadrosLista = 0;
+function pararQuadro() { if (quadro) { cancelAnimationFrame(quadro); quadro = null; } }
+function velocidade() { return estado.n / (DURACAO[estado.n] || 5000) * 1000 * fator; }   // valores por segundo
+function atualizaVel() {
+  const seg = Math.round((DURACAO[n] || 5000) / 100 / fator) / 10;
+  $("vel_txt").textContent = `cerca de ${String(seg).replace(".", ",")} segundos para sortear os ${fmtInt(n)} valores`;
+}
 function anima(xs, pop, n, manual) {
-  if (quadro) cancelAnimationFrame(quadro);
+  pararQuadro();
   estado = preparaEstado(xs, pop, n);
   desenha(estado);
   if (manual) return;
-  // duracao: cerca de 2 segundos no total, mas nunca menos de 0,3 s por valor
-  const duracao = Math.max(2000, Math.min(n * 300, 4000));
-  const inicio = performance.now();
-  const passo = () => {
-    const t = (performance.now() - inicio) / duracao;
-    const ate = t >= 1 ? n : Math.max(1, Math.floor(n * t));
-    avanca(estado, ate); desenha(estado);
-    if (estado.k < n) quadro = requestAnimationFrame(passo); else quadro = null;
-  };
-  quadro = requestAnimationFrame(passo);
+  continuar();
+}
+function continuar() {
+  ultimo = performance.now();
+  $("pausa").textContent = "Pausar"; $("pausa").disabled = false;
+  quadro = requestAnimationFrame(quadroSeguinte);
+}
+function quadroSeguinte(agora) {
+  const dt = Math.min(0.25, (agora - ultimo) / 1000); ultimo = agora;
+  estado.acum = Math.min(estado.n, estado.acum + dt * velocidade());
+  const ate = Math.floor(estado.acum);
+  if (ate > estado.k) { avanca(estado, ate); desenha(estado); }
+  if (estado.k < estado.n) quadro = requestAnimationFrame(quadroSeguinte);
+  else { quadro = null; $("pausa").disabled = true; }
+}
+function pausar() {
+  if (quadro) { pararQuadro(); $("pausa").textContent = "Continuar"; quadrosLista = -1; atualizaLista(estado); }
+  else if (estado && dados && estado.k < estado.n) continuar();
 }
 function passoAPasso() {
   if (!estado || estado.k >= estado.n) anima(dados, popAtual, n, true);
-  if (quadro) { cancelAnimationFrame(quadro); quadro = null; }
-  avanca(estado, estado.k + 1); desenha(estado);
+  if (quadro) { pararQuadro(); $("pausa").textContent = "Continuar"; }
+  avanca(estado, estado.k + 1); estado.acum = estado.k; quadrosLista = -1; desenha(estado);
+  $("pausa").disabled = estado.k >= estado.n; if (estado.k < estado.n) $("pausa").textContent = "Continuar";
+}
+function atualizaLista(st) {
+  if (!$("lista").open) return;
+  if (st.k > 0 && st.k < st.n && (++quadrosLista % 6) !== 0) return;   // durante a animação, atualiza a cada 6 quadros
+  if (!dados || st.k === 0) { $("lista_txt").textContent = "Nenhum valor foi sorteado ainda. Aperte Rodar para começar."; return; }
+  const txt = Array.from(st.xs.slice(0, st.k), v => st.pop.discreta ? String(Math.round(v)) : fmt(v)).join("   ");
+  $("lista_txt").textContent = `${st.k < st.n ? `Os ${fmtInt(st.k)} valores sorteados até agora` : `Os ${fmtInt(st.n)} valores sorteados`}, na ordem em que saíram:\n` + txt;
 }
 
 atualizaPainel();
+atualizaVel();
 iniciar();
 </script>
 </body>
