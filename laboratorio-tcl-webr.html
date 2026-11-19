@@ -4,68 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Laboratório do Teorema Central do Limite — R no navegador</title>
-<meta name="description" content="O Teorema Central do Limite em linguagem simples, com uma simulação para ver o sino aparecer: sorteie amostras de uma população com qualquer formato e veja as médias se concentrarem. R rodando no navegador, inclusive no celular.">
-<style>
-  :root { color-scheme: light; --azul:#1a4f8b; --cinza:#f4f5f7; --borda:#d8dce2; --verde:#157347; --verm:#b02a37; }
-  * { box-sizing: border-box; }
-  body { background: #fff; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-         margin: 0; padding: 16px; max-width: 820px; margin-inline: auto;
-         color: #1c2430; line-height: 1.5; }
-  h1 { font-size: 1.3rem; color: var(--azul); margin-bottom: 4px; }
-  h2 { font-size: 1.02rem; color: var(--azul); margin: 22px 0 6px; }
-  .sub { color: #5a6573; font-size: .92rem; margin-top: 0; }
-  .chamada { border-left: 5px solid var(--azul); background: #eef3fa; padding: 12px 14px;
-             margin: 14px 0; font-size: 1.02rem; border-radius: 0 10px 10px 0; }
-  .chamada b { color: var(--azul); }
-  .chamada p { margin: 0; } .chamada p + p { margin-top: 8px; }
-  .nota { font-size: .92rem; color: #5a6573; margin: 8px 0; }
-  .cenarios { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-              gap: 8px; margin: 8px 0 4px; }
-  .cenarios button { border: 1px solid var(--borda); border-radius: 8px;
-              padding: 10px; font-size: .88rem; cursor: pointer; background: #fff;
-              text-align: left; line-height: 1.35; }
-  .cenarios button b { color: var(--azul); }
-  .cenarios button.ativo { outline: 3px solid var(--azul); background: #eef3fa; }
-  .cenarios button .tag { display: none; color: var(--verde); font-weight: 700; }
-  .cenarios button.ativo .tag { display: inline; }
-  .ctl { font-size: .92rem; margin: 8px 0 4px; }
-  .opcoes { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
-  .opcoes button { border: 1px solid var(--borda); background: #fff; border-radius: 8px;
-                   padding: 9px 14px; font-size: 1rem; font-weight: 700; cursor: pointer;
-                   font-family: ui-monospace, Consolas, monospace; min-width: 64px; }
-  .opcoes button.ativo { background: var(--azul); color: #fff; border-color: var(--azul); }
-  .previsao { font-size: .95rem; background: #fffbe8; border: 1px solid #e8ddb0;
-              border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
-  .botoes { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; align-items: center; }
-  .botoes button { border: 0; border-radius: 8px; padding: 12px 22px; font-size: 1rem;
-           font-weight: 600; cursor: pointer; }
-  #rodar { background: var(--azul); color: #fff; min-width: 140px; }
-  #rodar:disabled { background: #9fb3cb; cursor: wait; }
-  #resultado.desatualizado { opacity: .45; }
-  #aviso { font-size: .9rem; color: var(--verm); font-weight: 600; margin: 6px 0; min-height: 1.2em; }
-  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-  .card { border: 2px solid var(--borda); border-radius: 10px; padding: 10px 12px; }
-  .card h3 { margin: 0 0 4px; font-size: .9rem; }
-  .card .big { font-size: 1.7rem; font-weight: 800; font-family: ui-monospace, Consolas, monospace; }
-  .card.centro { border-color: var(--verde); } .card.centro h3 { color: var(--verde); }
-  .card.espalha { border-color: var(--azul); } .card.espalha h3 { color: var(--azul); }
-  .card .nota { font-size: .8rem; color: #5a6573; margin: 0; }
-  #verifica { font-size: .92rem; margin-top: 8px; }
-  #graficos canvas { width: 100%; height: auto; border: 1px solid var(--borda);
-                     border-radius: 10px; margin-top: 12px; background: #fff; display: block; }
-  .escondido { display: none !important; }
-  details { margin-top: 12px; font-size: .88rem; }
-  details pre { background: #10151c; color: #d7e3f0; border-radius: 10px; padding: 12px;
-                font-size: .8rem; overflow-x: auto; white-space: pre-wrap; }
-  .box { background: var(--cinza); border: 1px solid var(--borda);
-         border-radius: 10px; padding: 12px; margin: 12px 0; font-size: .92rem; }
-  footer { color: #5a6573; font-size: .85rem; margin-top: 24px;
-           border-top: 1px solid var(--borda); padding-top: 12px; }
-  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
-</style>
+<meta name="description" content="O Teorema Central do Limite em linguagem simples: veja 1.000 amostras saírem uma a uma, a média de cada uma cair no gráfico e o sino se formar, qualquer que seja o formato da população. Simulação com R rodando no navegador, inclusive no celular.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="laboratorio.css">
+<style>
+  .cenarios { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; margin: 8px 0 4px; }
+  .cenarios button { padding: 10px; font-size: .88rem; cursor: pointer; text-align: left; line-height: 1.35; }
+  .cenarios button .tag { display: none; color: var(--verde); font-weight: 700; }
+  .cenarios button.ativo .tag { display: inline; }
+</style>
 </head>
 <body>
 <header class="faixa"><div class="faixa-in">
@@ -83,28 +31,33 @@
   Em linguagem simples: sorteie uma amostra de qualquer população e calcule a média. Se a
   amostra for grande, essa média cai perto da média da população, e o erro que ela comete segue
   um padrão conhecido: o sino da curva normal, que fica mais estreito quanto maior a amostra.
-  O formato da população não importa. É por isso que uma pesquisa com 2 mil pessoas acerta a
-  faixa do voto de 150 milhões de eleitores.</p>
-  <p>Nesta página você pode simular e ver como isso acontece.</p>
+  O formato da população não importa. É por isso que uma pesquisa com 2 mil pessoas acerta, dentro de
+  uma margem de erro, a fração de votos de cada candidato entre 150 milhões de eleitores.</p>
+  <p>Nesta página você vê as amostras saírem uma a uma e o sino se formar com as médias delas.</p>
 </div>
 
-<p class="nota">A simulação sorteia 1.000 amostras de tamanho <b>n</b> da população escolhida,
-calcula a média de cada uma e mostra como essas 1.000 médias se distribuem. Mude a população e
-o n e veja o que acontece com o sino.</p>
+<p class="nota">A simulação sorteia 1.000 amostras de tamanho <b>n</b> da população escolhida, uma a uma.
+A cada amostra, o gráfico de cima mostra os n valores e a média deles; essa média desce para o gráfico de
+baixo, onde as 1.000 médias vão formando um desenho. Mude a população e o n e veja o que acontece com
+esse desenho.</p>
 
 <h2>1. Escolha a população</h2>
 <div class="cenarios" id="cenarios"></div>
 
 <h2>2. Escolha o tamanho da amostra</h2>
-<div class="ctl"><b>n</b> = quantos valores entram em cada amostra.</div>
+<div class="ctl"><b>n</b> é o número de valores que entram em cada amostra. A simulação sorteia 1.000 amostras desse tamanho.</div>
 <div class="opcoes" id="ns"></div>
 
 <div class="previsao" id="previsao"></div>
 
 <div class="botoes">
   <button id="rodar" disabled>carregando o R…</button>
-  <span class="nota" style="margin:0">Cada clique faz um sorteio novo.</span>
+  <button id="pausa" class="sec" disabled>Pausar</button>
+  <button id="passo" class="sec" disabled>Uma amostra de cada vez</button>
+  <button id="repetir" class="sec" disabled>Rever o sorteio</button>
 </div>
+<div class="veloc"><label for="vel">Velocidade do sorteio:</label>
+  <input type="range" id="vel" min="-2" max="2" step="1" value="0"> <span id="vel_txt"></span></div>
 <div id="aviso"></div>
 
 <div id="resultado">
@@ -117,8 +70,20 @@ o n e veja o que acontece com o sino.</p>
       <p class="nota" id="nota_desvio"></p></div>
   </div>
   <div id="verifica"></div>
-  <div id="graficos"></div>
+  <canvas id="anim"></canvas>
+  <details class="lista" id="lista"><summary>Ver a lista das médias sorteadas</summary><pre id="lista_txt"></pre></details>
 </div>
+
+<details class="eq"><summary>A fórmula por trás do sino</summary><div>
+  <p>A população tem média <span class="f">μ</span> e desvio-padrão <span class="f">σ</span>. Uma amostra de
+  n valores tem a sua própria média, que muda de uma amostra para outra.</p>
+  <p>O teorema diz que, para n grande, a média da amostra segue aproximadamente uma distribuição normal (o sino) com
+  média <span class="f">μ</span> e desvio-padrão <span class="f">σ ÷ √n</span>, qualquer que seja o formato da
+  população. Esse <span class="f">σ ÷ √n</span> chama-se erro-padrão da média.</p>
+  <p>Em consequência, cerca de 95% das médias de amostras caem entre <span class="f">μ − 2σ ÷ √n</span> e
+  <span class="f">μ + 2σ ÷ √n</span>. O próximo passo da trilha, os intervalos de confiança, usa esse fato ao
+  contrário: parte de uma média observada para dizer onde a média da população deve estar.</p>
+</div></details>
 
 <details><summary>Ver o código R que está rodando (muda com os parâmetros)</summary>
 <pre id="codigoview"></pre></details>
@@ -153,165 +118,125 @@ o n e veja o que acontece com o sino.</p>
 </div>
 
 <script type="module">
+const phi = z => Math.exp(-0.5 * z * z) / Math.sqrt(2 * Math.PI);
 // Cada população: gerador em R (m = quantos valores), média e desvio-padrão teóricos,
-// e o que a página diz sobre ela.
+// a curva (densidade) para o gráfico, a faixa do eixo e o que a página diz sobre ela.
 const POPS = [
   { id: "bern", nome: "Bernoulli com p = 0,2",
-    desc: "Cada valor é 1 com probabilidade 0,2 e 0 com probabilidade 0,8. É uma pesquisa eleitoral em que 20% votam no candidato: a média de uma amostra é a fração que diz votar.",
-    r: "rbinom(m, 1, 0.2)", mu: 0.2, sd: 0.4, assim: true, discreta: true,
-    sigmaExpl: " (σ = √(0,2 × 0,8))",
-    // populacao discreta: duas barras, com a probabilidade de cada valor
-    tituloPop: "A população: 80% dos valores são 0 e 20% são 1",
-    subPop: "A altura de cada barra é a probabilidade de o valor sair",
-    popR: `plot(NA, xlim = c(-0.3, 1.3), ylim = c(0, 1.05), axes = FALSE, xlab = "valor", ylab = "", main = "")
-rect(c(-0.12, 0.88), 0, c(0.12, 1.12), c(0.8, 0.2), col = "grey80", border = NA)
-text(c(0, 1), c(0.8, 0.2), labels = c("80%", "20%"), pos = 3)
-axis(1, at = c(0, 1))` },
+    desc: "Cada valor é 1 com probabilidade 0,2 e 0 com probabilidade 0,8. É uma pesquisa eleitoral em que 20% votam no candidato: a média de uma amostra é a fração dos entrevistados que diz votar nele.",
+    r: "rbinom(m, 1, 0.2)", mu: 0.2, sd: 0.4, assim: true, discreta: true, faixa: [-0.3, 1.3],
+    sigmaExpl: " (aqui σ = √(0,2 × 0,8) = 0,400)", f: null,
+    popTxt: "As barras cinzas são a população: 80% dos valores são 0 e 20% são 1" },
   { id: "unif", nome: "Uniforme entre 0 e 1",
     desc: "Todo valor entre 0 e 1 tem a mesma chance de sair. O desenho é achatado, sem pico.",
-    r: "runif(m, 0, 1)", mu: 0.5, sd: Math.sqrt(1/12), assim: false, discreta: false, sigmaExpl: "",
-    dens: "dunif(x, 0, 1)", faixa: "c(-0.1, 1.1)",
-    tituloPop: "A população: qualquer valor entre 0 e 1, todos com a mesma chance" },
+    r: "runif(m, 0, 1)", mu: 0.5, sd: Math.sqrt(1 / 12), assim: false, discreta: false, faixa: [-0.1, 1.1], sigmaExpl: "",
+    f: x => (x >= 0 && x <= 1) ? 1 : 0,
+    popTxt: "A curva cinza é a população de onde as amostras vão sair" },
   { id: "exp", nome: "Exponencial com média 1",
     desc: "É o tempo de espera até o próximo ônibus: há muitas esperas curtas e algumas muito longas. O desenho é muito assimétrico.",
-    r: "rexp(m, 1)", mu: 1, sd: 1, assim: true, discreta: false, sigmaExpl: "",
-    dens: "dexp(x, 1)", faixa: "c(0, 6)",
-    tituloPop: "A população: muitos valores pequenos, poucos valores muito grandes" },
+    r: "rexp(m, 1)", mu: 1, sd: 1, assim: true, discreta: false, faixa: [0, 6], sigmaExpl: "",
+    f: x => x < 0 ? 0 : Math.exp(-x),
+    popTxt: "A curva cinza é a população de onde as amostras vão sair" },
   { id: "bimod", nome: "Dois picos",
     desc: "É a mistura de dois grupos bem diferentes, como as alturas de crianças e adultos juntas. É o oposto de um sino.",
     r: "ifelse(rbinom(m, 1, 0.5) == 1, rnorm(m, -2, 0.7), rnorm(m, 2, 0.7))",
-    mu: 0, sd: Math.sqrt(0.49 + 4), assim: false, discreta: false, sigmaExpl: "",
-    dens: "0.5 * dnorm(x, -2, 0.7) + 0.5 * dnorm(x, 2, 0.7)", faixa: "c(-4.5, 4.5)",
-    tituloPop: "A população: dois grupos, um em torno de -2 e outro em torno de 2" },
+    mu: 0, sd: Math.sqrt(0.49 + 4), assim: false, discreta: false, faixa: [-4.5, 4.5], sigmaExpl: "",
+    f: x => 0.5 * phi((x + 2) / 0.7) / 0.7 + 0.5 * phi((x - 2) / 0.7) / 0.7,
+    popTxt: "A curva cinza é a população de onde as amostras vão sair" },
   { id: "norm", nome: "Normal com média 10 e desvio-padrão 3",
     desc: "É o caso fácil: a população já é um sino.",
-    r: "rnorm(m, 10, 3)", mu: 10, sd: 3, assim: false, discreta: false, sigmaExpl: "",
-    dens: "dnorm(x, 10, 3)", faixa: "c(-1, 21)",
-    tituloPop: "A população: um sino em torno de 10" },
+    r: "rnorm(m, 10, 3)", mu: 10, sd: 3, assim: false, discreta: false, faixa: [-1, 21], sigmaExpl: "",
+    f: x => phi((x - 10) / 3) / 3,
+    popTxt: "A curva cinza é a população de onde as amostras vão sair" },
   { id: "cauchy", nome: "Cauchy, o contraexemplo",
-    desc: "Os valores extremos são tão frequentes que o desvio-padrão não existe como número. O teorema exige um desvio-padrão finito, então aqui ele não vale: as médias não formam sino e o desenho não estreita.",
-    r: "rcauchy(m)", mu: null, sd: null, iqr: 2, assim: false, discreta: false, sigmaExpl: "",
-    dens: "dcauchy(x)", faixa: "c(-25, 25)",
-    tituloPop: "A população: um pico no zero e caudas muito longas dos dois lados" },
+    desc: "Os valores extremos são tão frequentes que o desvio-padrão não existe como número. O teorema exige um desvio-padrão finito, então aqui ele não vale: as médias não formam sino e o desenho não fica mais estreito quando n cresce.",
+    r: "rcauchy(m)", mu: null, sd: null, iqr: 2, assim: false, discreta: false, faixa: [-25, 25], sigmaExpl: "",
+    f: x => 1 / (Math.PI * (1 + x * x)),
+    popTxt: "A curva cinza é a população de onde as amostras vão sair; ela não tem média nem desvio-padrão" },
 ];
 const NS = [1, 5, 30, 100, 500, 2000];
-const K = 1000;
+const K = 1000;          // quantas amostras
+const NB1 = 40;          // faixas do gráfico da população
+const NB2 = 46;          // faixas do gráfico das médias, nas populações contínuas
 
 const $ = id => document.getElementById(id);
 const fmt = x => {
   if (x === null || x === undefined || Number.isNaN(x)) return "—";
-  const casas = Math.abs(x) < 0.01 ? 4 : 3;
-  return x.toFixed(casas).replace(".", ",");
+  const casas = Math.abs(x) < 0.01 && x !== 0 ? 4 : 3;
+  return x.toFixed(casas).replace(".", ",").replace("-", "−");
 };
+const fmtC = (x, casas) => x.toFixed(casas).replace(".", ",").replace("-", "−");
+const casasDe = w => Math.min(4, Math.max(1, Math.ceil(-Math.log10(w)) + 1));
 const fmtInt = k => k.toLocaleString("pt-BR");
+const fmtPct = p => (Math.round(p * 10) / 10).toString().replace(".", ",") + "%";
 const ep = (p, n) => p.sd / Math.sqrt(n);
 // quão perto é perto: com K amostras, o erro-padrão observado fica quase sempre a menos de
 // 2/sqrt(2K) do previsto (arredondado para cima)
-const tolerancia = K => {
-  const x = 200 / Math.sqrt(2 * K);
-  return x >= 10 ? Math.ceil(x / 5) * 5 : Math.ceil(x);
-};
+const tolerancia = K => { const x = 200 / Math.sqrt(2 * K); return x >= 10 ? Math.ceil(x / 5) * 5 : Math.ceil(x); };
 
 let popAtual = POPS[0];
 let n = 30;
 let seed = Math.floor(Math.random() * 100000);
-let rodou = false;          // já existe um resultado na tela?
+let fator = 1;
+let dados = null;    // { medias, amostras, valores, res }: o que o R devolveu na última rodada
 
 function codigoR() {
-  const temTeoria = popAtual.mu !== null;
-  return `set.seed(${seed})
-n <- ${n}         # tamanho de cada amostra
-K <- ${K}      # quantas amostras sortear
-sorteia <- function(m) ${popAtual.r}   # m valores da populacao
-fmt <- function(x) formatC(x, format = "f", digits = 3, decimal.mark = ",")
-
-# as K amostras de tamanho n, e a media de cada uma
-medias <- replicate(K, mean(sorteia(n)))
-
-cat("RES", mean(medias), sd(medias), median(medias), IQR(medias), "\\n")
-
-azul <- rgb(0.10, 0.31, 0.55, 0.85)
-par(mar = c(4.2, 1.2, 4.4, 1))
-# titulo em duas linhas: o que e o grafico, e como ler a altura
-titulos <- function(principal, explicacao) {
-  title(main = principal, line = 2.4)
-  mtext(explicacao, side = 3, line = 0.6, cex = 0.9, col = "grey30")
+  const [a, b] = popAtual.faixa, d = popAtual.discreta;
+  const linhas = [
+    `set.seed(${seed})`,
+    `n <- ${n}         # tamanho de cada amostra`,
+    `K <- ${K}      # quantas amostras sortear`,
+    `sorteia <- function(m) ${popAtual.r}   # sorteia m valores da populacao`,
+  ];
+  if (!d) linhas.push(`faixas <- seq(${a}, ${b}, length.out = ${NB1 + 1})   # define as ${NB1} faixas do grafico da populacao`);
+  linhas.push(``, `medias <- numeric(K)`, `for (k in 1:K) {`,
+    `  x <- sorteia(n)              # sorteia uma amostra de n valores`,
+    `  medias[k] <- mean(x)         # guarda a media dessa amostra`,
+    `  # devolve a amostra a pagina, que a desenha: ${d ? "quantos 0 e quantos 1 sairam" : "quantos valores cairam em cada faixa"}`,
+    d ? `  cat("A", sum(x == 0), sum(x == 1), "\\n")`
+      : `  cat("A", tabulate(findInterval(x, faixas, rightmost.closed = TRUE), ${NB1}), "\\n")`);
+  if (n <= 30) linhas.push(`  cat("V", x, "\\n")           # com n pequeno, devolve tambem os proprios valores`);
+  linhas.push(`}`, `cat("M", medias, "\\n")        # devolve as K medias, na ordem em que sairam`,
+    `cat("RES", mean(medias), sd(medias), median(medias), IQR(medias), "\\n")`);
+  return linhas.join("\n");
 }
 
-# 1. a populacao: o formato teorico, sem sorteio
-${popAtual.popR || `xx <- seq(${popAtual.faixa}[1], ${popAtual.faixa}[2], length.out = 1200)
-yy <- sapply(xx, function(x) ${popAtual.dens})
-plot(xx, yy, type = "n", ylim = c(0, max(yy) * 1.2), yaxt = "n", ylab = "", main = "", xlab = "valor")
-polygon(c(xx, rev(xx)), c(yy, rep(0, length(xx))), col = "grey80", border = NA)`}
-titulos("${popAtual.tituloPop}", "${popAtual.subPop || "Quanto mais alta a curva, mais comum é o valor"}")${temTeoria ? `
-abline(v = ${popAtual.mu}, col = "red", lwd = 2, lty = 2)
-legend("topright", bty = "n", lty = 2, lwd = 2, col = "red", legend = "média da população (μ)")` : ``}
-
-# 2. as medias das K amostras, na escala prevista pela teoria
-titulo <- paste0("As médias das ", K, " amostras de n = ", n)${temTeoria ? `
-e  <- ${popAtual.sd} / sqrt(n)              # erro-padrao previsto
-xl <- ${popAtual.mu} + c(-4, 4) * e           # eixo: media da populacao +/- 4 erros-padrao` : `
-xl <- ${popAtual.faixa}   # mesmo eixo do grafico da populacao: as medias tem o mesmo formato dela`}${popAtual.discreta ? `
-# as medias so podem valer multiplos de 1/n: cada barra cobre o mesmo numero de valores possiveis
-w  <- min(1 / n, 0.5)
-w  <- w * max(1, ceiling(diff(xl) / 46 / w))
-br <- seq(floor(xl[1] / w) * w - min(1 / n, 0.5) / 2, ceiling(xl[2] / w) * w + w, by = w)` : `
-br <- seq(xl[1], xl[2], length.out = 46)`}
-dentro <- medias[medias >= br[1] & medias <= br[length(br)]]
-h <- hist(dentro, breaks = br, plot = FALSE)
-ymax <- max(h$density${temTeoria ? `, dnorm(${popAtual.mu}, ${popAtual.mu}, e)` : ``})
-plot(h, freq = FALSE, xlim = xl, ylim = c(0, ymax * 1.3), col = azul, border = NA,
-     yaxt = "n", ylab = "", main = "", xlab = "média da amostra")
-titulos(titulo, paste0("Cada amostra tem ", n, " valores e dá uma média; aqui estão as ", K, " médias"))${temTeoria ? `
-curve(dnorm(x, ${popAtual.mu}, e), add = TRUE, col = "red", lwd = 3)
-abline(v = ${popAtual.mu}, col = "red", lwd = 2, lty = 2)
-legend("topright", bty = "n", lwd = c(3, 2), lty = c(1, 2), col = "red",
-       legend = c("normal que a teoria prevê para n grande", "média da população (μ)"))
-# a chave marca a largura prevista: media da populacao +/- 1 erro-padrao
-y_chave <- ymax * 1.12
-arrows(${popAtual.mu} - e, y_chave, ${popAtual.mu} + e, y_chave, code = 3, angle = 90, length = 0.05, lwd = 2)
-text(${popAtual.mu}, y_chave, labels = paste0("largura (erro-padrão) = ", fmt(e)), pos = 3, cex = 0.95)` : `
-legend("topright", bty = "n", legend = "sem desvio-padrão finito: a teoria não prevê sino")`}`;
-}
-
-// ---------- painel: textos que mudam com os controles ----------
+// ---------- painel: textos que mudam com os parâmetros ----------
 function atualizaPainel() {
   const temTeoria = popAtual.mu !== null;
   document.querySelectorAll("#ns button").forEach(b => b.classList.toggle("ativo", parseInt(b.dataset.v) === n));
-
   if (temTeoria) {
     const e = ep(popAtual, n);
     let t = `<b>O que a teoria prevê:</b> para n grande, as médias formam aproximadamente um sino centrado na ` +
       `média da população, μ = <b>${fmt(popAtual.mu)}</b>, com largura (erro-padrão) igual ao desvio-padrão da ` +
-      `população dividido pela raiz de n: σ ÷ √n = ${fmt(popAtual.sd)}${popAtual.sigmaExpl} ÷ √${n} = <b>${fmt(e)}</b>. ` +
+      `população dividido pela raiz de n: σ ÷ √n = ${fmt(popAtual.sd)} ÷ √${n} = <b>${fmt(e)}</b>${popAtual.sigmaExpl}. ` +
       `Quanto maior o n, melhor a aproximação.`;
-    if (n === 1) t += ` Com n = 1, cada "média" é um único valor sorteado: as médias têm o formato da ` +
-      `população, e o teorema não aparece.`;
+    if (n === 1) t += ` Com n = 1, cada "média" é um único valor sorteado: as médias têm o formato da população, e o teorema não aparece.`;
     $("previsao").innerHTML = t;
   } else {
-    $("previsao").innerHTML =
-      `<b>O que a teoria prevê:</b> as médias não formam sino. A média de n valores Cauchy tem exatamente a mesma ` +
+    $("previsao").innerHTML = `<b>O que a teoria prevê:</b> as médias não formam sino. A média de n valores sorteados dessa população tem exatamente a mesma ` +
       `distribuição de um único valor. A largura, medida pelo intervalo interquartil (a distância entre ` +
       `o primeiro e o terceiro quartil), fica em <b>≈ ${fmt(popAtual.iqr)}</b> para qualquer n.`;
   }
-
   $("lbl_centro").textContent = temTeoria ? "CENTRO DAS MÉDIAS" : "MEDIANA DAS MÉDIAS";
   $("nota_centro").textContent = temTeoria
-    ? `Média das ${fmtInt(K)} médias. Previsto: μ = ${fmt(popAtual.mu)}.`
-    : `Mediana das ${fmtInt(K)} médias. Aqui a média das médias muda muito de uma rodada para outra; a mediana muda pouco.`;
+    ? `Este número é a média das médias já sorteadas. A teoria prevê μ = ${fmt(popAtual.mu)}.`
+    : `Este número é a mediana das médias já sorteadas. Aqui a média das médias muda muito de uma rodada para outra, e a mediana muda pouco.`;
   $("lbl_desvio").textContent = temTeoria ? "LARGURA DO SINO (ERRO-PADRÃO)" : "LARGURA (INTERVALO INTERQUARTIL)";
   $("nota_desvio").textContent = temTeoria
-    ? `Desvio-padrão das ${fmtInt(K)} médias. Previsto: ${fmt(ep(popAtual, n))}.`
-    : `Intervalo interquartil das médias. Previsto: ${fmt(popAtual.iqr)}, para qualquer n.`;
-
+    ? `Este número é o desvio-padrão das médias já sorteadas. A teoria prevê σ ÷ √n = ${fmt(ep(popAtual, n))}.`
+    : `Este número é o intervalo interquartil das médias já sorteadas. A teoria prevê ${fmt(popAtual.iqr)}, para qualquer n.`;
   $("codigoview").textContent = codigoR();
 }
-
-// mudou um controle depois de um resultado: o resultado fica desatualizado
-function marcaDesatualizado() {
-  if (!rodou) return;
-  $("resultado").classList.add("desatualizado");
-  $("aviso").textContent = "Você mudou um parâmetro. Aperte Rodar para ver o resultado novo.";
+function limpaCartoes() { $("res_centro").textContent = "—"; $("res_desvio").textContent = "—"; }
+// um parâmetro mudou: limpa o sorteio anterior e mostra só a população nova e a previsão
+function reinicia() {
+  pararQuadro();
+  dados = null; dica = null;
+  limpaCartoes();
+  $("verifica").innerHTML = ""; $("aviso").textContent = "";
+  $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true; $("pausa").textContent = "Pausar";
+  estado = preparaEstado(); desenha(estado);
 }
 
 // ---------- botões ----------
@@ -322,7 +247,7 @@ POPS.forEach((p, i) => {
     popAtual = p;
     document.querySelectorAll(".cenarios button").forEach(x => x.classList.remove("ativo"));
     b.classList.add("ativo");
-    atualizaPainel(); marcaDesatualizado();
+    atualizaPainel(); reinicia();
   });
   $("cenarios").appendChild(b);
   if (i === 0) b.classList.add("ativo");
@@ -330,26 +255,27 @@ POPS.forEach((p, i) => {
 NS.forEach(v => {
   const b = document.createElement("button");
   b.textContent = fmtInt(v); b.dataset.v = v;
-  b.addEventListener("click", () => { n = v; atualizaPainel(); marcaDesatualizado(); });
+  b.addEventListener("click", () => { n = v; atualizaPainel(); reinicia(); });
   $("ns").appendChild(b);
 });
-$("rodar").addEventListener("click", () => rodar());
+$("rodar").addEventListener("click", rodar);
+$("repetir").addEventListener("click", () => { if (dados) anima(); });
+$("passo").addEventListener("click", () => { if (dados) passoAPasso(); });
+$("pausa").addEventListener("click", pausar);
+$("vel").addEventListener("input", () => { fator = Math.pow(2, parseInt($("vel").value)); atualizaVel(); });
+$("lista").addEventListener("toggle", () => { quadrosLista = -1; if (estado) atualizaLista(estado); });
+window.addEventListener("resize", () => { if (estado) desenha(estado); });
 
 // ---------- webR ----------
 let webR, shelter;
 async function iniciar() {
   const inicio = Date.now();
-  const relogio = setInterval(() => {
-    $("rodar").textContent = `carregando o R… ${Math.round((Date.now() - inicio) / 1000)} s`;
-  }, 1000);
+  const relogio = setInterval(() => { $("rodar").textContent = `carregando o R… ${Math.round((Date.now() - inicio) / 1000)} s`; }, 1000);
   try {
     const { WebR } = await import("https://webr.r-wasm.org/latest/webr.mjs");
-    webR = new WebR();
-    await webR.init();
-    shelter = await new webR.Shelter();
+    webR = new WebR(); await webR.init(); shelter = await new webR.Shelter();
     clearInterval(relogio);
-    $("rodar").innerHTML = "&#9654; Rodar";
-    $("rodar").disabled = false;
+    $("rodar").innerHTML = "&#9654; Rodar"; $("rodar").disabled = false;
   } catch (e) {
     clearInterval(relogio);
     $("rodar").textContent = "o R não carregou";
@@ -360,69 +286,413 @@ async function iniciar() {
 async function rodar() {
   seed = Math.floor(Math.random() * 100000);
   atualizaPainel();
-  $("rodar").disabled = true;
-  $("rodar").textContent = "sorteando…";
+  $("rodar").disabled = true; $("rodar").textContent = "sorteando…";
+  $("repetir").disabled = true; $("passo").disabled = true; $("pausa").disabled = true;
   $("aviso").textContent = "";
-  $("resultado").classList.remove("desatualizado");
-  $("graficos").innerHTML = "";
   try {
-    const captura = await shelter.captureR(codigoR(), {
-      withAutoprint: false, captureStreams: true, captureConditions: true,
-      captureGraphics: { width: 700, height: 300, bg: "white", pointsize: 13 }
-    });
-    let res = null;
+    const captura = await shelter.captureR(codigoR(), { withAutoprint: false, captureStreams: true, captureConditions: true });
+    let res = null, medias = null; const amostras = [], valores = [];
     for (const linha of captura.output) {
-      if (linha.type === "stdout" && linha.data.startsWith("RES")) {
-        const p = linha.data.trim().split(/\s+/);
-        res = { media: parseFloat(p[1]), sd: parseFloat(p[2]),
-                mediana: parseFloat(p[3]), iqr: parseFloat(p[4]) };
-      }
+      if (linha.type !== "stdout") continue;
+      const d = linha.data;
+      if (d.startsWith("A ")) amostras.push(Int32Array.from(d.trim().split(/\s+/).slice(1), Number));
+      else if (d.startsWith("V ")) valores.push(Float64Array.from(d.trim().split(/\s+/).slice(1), Number));
+      else if (d.startsWith("M ")) medias = Float64Array.from(d.trim().split(/\s+/).slice(1), Number);
+      else if (d.startsWith("RES")) { const p = d.trim().split(/\s+/); res = { media: +p[1], sd: +p[2], mediana: +p[3], iqr: +p[4] }; }
     }
-    const temTeoria = popAtual.mu !== null;
-    let texto = "";
-    if (res && temTeoria) {
-      const e = ep(popAtual, n);
-      $("res_centro").textContent = fmt(res.media);
-      $("res_desvio").textContent = fmt(res.sd);
-      texto = `<b>Previsto e observado:</b> centro ${fmt(popAtual.mu)} → <b>${fmt(res.media)}</b>; largura ` +
-        `${fmt(e)} → <b>${fmt(res.sd)}</b>. A diferença é o acaso do sorteio; com ${fmtInt(K)} amostras, ela fica ` +
-        `quase sempre abaixo de ${tolerancia(K)}% do valor previsto. ` +
-        `<b>No gráfico:</b> o teorema aparece quando o histograma azul encaixa na curva vermelha, a normal ` +
-        `que vale no limite, quando n cresce. `;
-      if (n === 1) texto += `Com n = 1 ele não aparece: as médias têm o formato da população.`;
-      else if (n < 10 && popAtual.assim) texto += `Com n pequeno, o desenho ainda guarda a assimetria da população.`;
-      else if (n < 10) texto += `Com n pequeno, o desenho ainda guarda traços do formato da população.`;
-      else texto += `Para reduzir a largura pela metade, é preciso multiplicar n por 4.`;
-    } else if (res) {
-      $("res_centro").textContent = fmt(res.mediana);
-      $("res_desvio").textContent = fmt(res.iqr);
-      texto = `<b>As médias não se concentram quando n cresce:</b> o intervalo interquartil ficou em ` +
-        `<b>${fmt(res.iqr)}</b>, contra os ${fmt(popAtual.iqr)} que a teoria previu, e não muda com o n. ` +
-        `O desvio-padrão das médias nesta rodada foi ${fmt(res.sd)}, mas ele muda muito de um sorteio para ` +
-        `outro: aperte Rodar de novo e verá outro valor.`;
+    if (res && medias && medias.length === K && amostras.length === K) {
+      dados = { medias, amostras, valores: valores.length === K ? valores : null, res };
+      escreveVerifica(res);
+      $("repetir").disabled = false; $("passo").disabled = false;
+      $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
+      anima();
+    } else {
+      $("aviso").textContent = "O R não devolveu os valores esperados.";
     }
-    $("verifica").innerHTML = texto;
-
-    // imagens, na ordem em que o R as desenhou: populacao, medias
-    for (const img of captura.images) {
-      const cv = document.createElement("canvas");
-      cv.width = img.width; cv.height = img.height;
-      cv.getContext("2d").drawImage(img, 0, 0);
-      $("graficos").appendChild(cv);
-    }
-
-    rodou = true;
-    $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
     $("aviso").textContent = "Erro na execução: " + e.message;
   } finally {
     if (shelter) await shelter.purge();
-    $("rodar").innerHTML = "&#9654; Rodar";
-    $("rodar").disabled = false;
+    $("rodar").innerHTML = "&#9654; Rodar"; $("rodar").disabled = false;
   }
 }
 
+function escreveVerifica(res) {
+  const pop = popAtual, temTeoria = pop.mu !== null;
+  let t;
+  if (temTeoria) {
+    const e = ep(pop, n);
+    t = `<b>Previsto e observado, ao fim das ${fmtInt(K)} amostras:</b> a teoria previa centro ${fmt(pop.mu)} e o observado foi <b>${fmt(res.media)}</b>; ` +
+      `previa largura ${fmt(e)} e a observada foi <b>${fmt(res.sd)}</b>. A diferença vem do acaso do sorteio; com ${fmtInt(K)} amostras, ela fica ` +
+      `quase sempre abaixo de ${tolerancia(K)}% do valor previsto. `;
+    if (n === 1) t += `Com n = 1, cada "média" é um único valor sorteado: o gráfico de baixo repete o formato da população, e o teorema não aparece. `;
+    else if (n < 10 && pop.assim) t += `Com n pequeno, o gráfico de baixo ainda guarda a assimetria da população. `;
+    else if (n < 10) t += `Com n pequeno, o gráfico de baixo ainda guarda traços do formato da população. `;
+    else t += `Para reduzir a largura pela metade, é preciso multiplicar n por 4. `;
+    t += `<b>Nos gráficos:</b> em cima, a população está em cinza e a amostra que acabou de sair está em azul, com a média dela ` +
+      `em vermelho; a faixa azul-clara é o trecho do eixo que o gráfico de baixo amplia. Embaixo, cada média cai na barra da faixa ` +
+      `em que o valor dela está. O teorema aparece quando as barras encaixam na curva vermelha, o sino do qual as médias se aproximam à medida que n cresce. ` +
+      `Aperte Rodar de novo: as barras mudam um pouco e a curva não muda.`;
+  } else {
+    t = `<b>As médias não se concentram quando n cresce:</b> o intervalo interquartil ficou em <b>${fmt(res.iqr)}</b>, ` +
+      `contra os ${fmt(pop.iqr)} que a teoria previu, e não muda com o n. O desvio-padrão das médias nesta rodada foi ` +
+      `${fmt(res.sd)}, mas ele muda muito de um sorteio para outro: aperte Rodar de novo e verá outro valor. ` +
+      `<b>Nos gráficos:</b> embaixo, as médias se espalham por todo o eixo, como a própria população, em vez de se juntar num sino.`;
+  }
+  $("verifica").innerHTML = t;
+}
+
+// ---------- a animação: uma amostra de cada vez, a média dela caindo no gráfico de baixo ----------
+let quadro = null, estado = null, ultimo = 0, quadrosLista = 0;
+// a escala do gráfico das médias: a teoria diz onde elas vão cair (μ ± 4 erros-padrão)
+function escalaMedias(pop, n) {
+  const [a, b] = pop.faixa;
+  if (pop.mu === null || n === 1) {
+    if (pop.discreta) return { x0: -0.5, x1: 1.5, w: 1, nb: 2, inicio: -0.5, passo: 1, ampliada: false };
+    return { x0: a, x1: b, w: (b - a) / NB2, nb: NB2, inicio: a, passo: 0, ampliada: false };
+  }
+  const e = ep(pop, n);
+  const x0 = Math.max(a, pop.mu - 4 * e), x1 = Math.min(b, pop.mu + 4 * e);
+  if (pop.discreta) {
+    // as médias só podem valer múltiplos de 1/n: cada barra cobre o mesmo número de valores possíveis
+    const passo = 1 / n;
+    const w = passo * Math.max(1, Math.ceil((x1 - x0) / NB2 / passo));
+    const inicio = Math.round(x0 / passo) * passo - passo / 2;
+    const nb = Math.max(1, Math.ceil((x1 - inicio) / w));
+    return { x0: inicio, x1: inicio + nb * w, w, nb, inicio, passo, ampliada: true };
+  }
+  return { x0, x1, w: (x1 - x0) / NB2, nb: NB2, inicio: x0, passo: 0, ampliada: true };
+}
+function preparaEstado() {
+  const [a, b] = popAtual.faixa, esc = escalaMedias(popAtual, n);
+  return { k: 0, acum: 0, a, b, largura1: (b - a) / NB1, esc, contagens: new Int32Array(esc.nb), fora: 0, soma: 0, soma2: 0, ord: [] };
+}
+function insereOrdenado(ord, v) {
+  let lo = 0, hi = ord.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (ord[m] < v) lo = m + 1; else hi = m; }
+  ord.splice(lo, 0, v);
+}
+function quantil(ord, p) {   // o mesmo cálculo do R (tipo 7)
+  const k = ord.length; if (k === 0) return NaN;
+  const h = (k - 1) * p, i = Math.floor(h);
+  return i + 1 < k ? ord[i] + (h - i) * (ord[i + 1] - ord[i]) : ord[i];
+}
+function resumo(st) {
+  const k = st.k; if (!k) return null;
+  const media = st.soma / k, vr = k > 1 ? (st.soma2 - k * media * media) / (k - 1) : 0;
+  return { media, sd: k > 1 ? Math.sqrt(Math.max(0, vr)) : NaN, mediana: quantil(st.ord, 0.5), iqr: quantil(st.ord, 0.75) - quantil(st.ord, 0.25) };
+}
+function avanca(st, ate) {
+  if (!dados) return;
+  for (; st.k < ate && st.k < K; st.k++) {
+    const m = dados.medias[st.k];
+    st.soma += m; st.soma2 += m * m; insereOrdenado(st.ord, m);
+    const i = Math.floor((m - st.esc.inicio) / st.esc.w);
+    if (i >= 0 && i < st.esc.nb) st.contagens[i]++; else st.fora++;
+  }
+  atualizaCartoes(st);
+}
+function atualizaCartoes(st) {
+  const r = resumo(st); if (!r) { limpaCartoes(); return; }
+  if (st.k === K && dados && dados.res) Object.assign(r, dados.res);   // ao fim, os números do R
+  const temTeoria = popAtual.mu !== null;
+  $("res_centro").textContent = fmt(temTeoria ? r.media : r.mediana);
+  $("res_desvio").textContent = st.k > 1 ? fmt(temTeoria ? r.sd : r.iqr) : "—";
+}
+
+// ---------- o desenho ----------
+const FONTE = '"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+const AZUL = "rgba(31,95,168,0.8)", VERMELHO = "#d62828", CINZA = "#d4d9e1", GRADE = "#e9edf2";
+let layout = null, dica = null;
+function preparaCanvas(id, razao, minH = 0) {
+  const cv = $(id);
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 700, H = Math.max(minH, Math.round(W * razao));
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  cv.style.height = H + "px";
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  return { g, W, H, fonte: Math.max(11, Math.round(W / 55)) };
+}
+function quebra(g, texto, largura) {
+  const linhas = []; let atual = "";
+  for (const pal of texto.split(" ")) { const tent = atual ? atual + " " + pal : pal; if (g.measureText(tent).width > largura && atual) { linhas.push(atual); atual = pal; } else atual = tent; }
+  linhas.push(atual);
+  return linhas;
+}
+// texto com um halo branco, para ficar legível por cima das linhas
+function escreve(g, s, x, y) { g.lineJoin = "round"; g.strokeStyle = "rgba(255,255,255,0.9)"; g.lineWidth = 4; g.strokeText(s, x, y); g.fillText(s, x, y); }
+// título e leitura de um painel; devolve onde o painel começa. Com desenhar = false só mede.
+function cabecalho(c, titulo, leitura, topo, desenhar) {
+  const { g, W, fonte } = c;
+  g.textAlign = "center";
+  g.font = `bold ${fonte + 2}px ${FONTE}`;
+  const lt = quebra(g, titulo, W - 16);
+  if (desenhar) { g.fillStyle = "#1c2430"; lt.forEach((l, i) => escreve(g, l, W / 2, topo + 17 * i)); }
+  const y = topo + 17 * (lt.length - 1) + 18;
+  g.font = `${fonte}px ${FONTE}`;
+  const ll = quebra(g, leitura, W - 16);
+  if (desenhar) { g.fillStyle = "#555"; ll.forEach((l, i) => escreve(g, l, W / 2, y + 15 * i)); }
+  return y + 15 * (ll.length - 1) + 12;
+}
+function ticksBonitos(a, b, alvo = 5) {
+  const bruto = (b - a) / alvo, pot = Math.pow(10, Math.floor(Math.log10(bruto)));
+  const m = bruto / pot, passo = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * pot;
+  const out = []; for (let t = Math.ceil(a / passo - 1e-9) * passo; t <= b + 1e-9; t += passo) out.push(Math.round(t / passo) * passo);
+  return out;
+}
+function fmtTick(t) { return (Math.round(t * 10000) / 10000).toString().replace(".", ",").replace("-", "−"); }
+
+function desenha(st, d = dica) {
+  const c = preparaCanvas("anim", 1.05, 640), { g, W, H, fonte } = c;
+  const pop = popAtual, temTeoria = pop.mu !== null, k = st.k, esc = st.esc;
+  const mAtual = k > 0 ? dados.medias[k - 1] : null;
+  const e = temTeoria ? ep(pop, n) : null;
+
+  // os textos dos dois painéis
+  const titulo1 = k === 0 ? `A população escolhida (${pop.nome})`
+    : `Amostra ${fmtInt(k)} de ${fmtInt(K)}: ${fmtInt(n)} ${n === 1 ? "valor" : "valores"}, média ${fmt(mAtual)}`;
+  const leitura1 = k === 0
+    ? `${pop.popTxt}${temTeoria ? `; a linha vermelha tracejada é a média dela, μ = ${fmt(pop.mu)}` : ``}. ` +
+      (esc.ampliada ? `A faixa azul-clara é o trecho do eixo que o gráfico de baixo amplia. ` : `O gráfico de baixo usa o mesmo eixo. `) + `Aperte Rodar e veja as amostras saírem.`
+    : (pop.discreta ? `As barras azuis contam quantos 0 e quantos 1 saíram nesta amostra`
+       : dados.valores ? `Cada ponto azul é um valor desta amostra` : `As barras azuis mostram quantos valores desta amostra caíram em cada faixa`) +
+      `; a linha vermelha é a média deles, que desce para o gráfico de baixo.`;
+  const titulo2 = k === 0 ? (temTeoria ? `O que a teoria prevê para as médias das amostras` : `As médias das amostras: a teoria não prevê sino`)
+    : k < K ? `As médias das ${fmtInt(k)} amostras já sorteadas` : `As médias das ${fmtInt(K)} amostras de n = ${fmtInt(n)}`;
+  const leitura2 = temTeoria
+    ? `Cada barra conta quantas médias caíram na faixa. A curva vermelha é o sino que a teoria prevê para n grande, centrado em μ = ${fmt(pop.mu)} ` +
+      `e com erro-padrão ${fmt(e)}: a altura dela diz quantas médias esperar em cada faixa ao fim das ${fmtInt(K)} amostras.`
+    : `Cada barra conta quantas médias caíram na faixa. Como esta população não tem desvio-padrão finito, a teoria não prevê sino: as médias se espalham como a própria população, por maior que seja n.`;
+  g.font = `${fonte}px ${FONTE}`;
+  const rotX2 = quebra(g, "média da amostra" + (esc.ampliada ? " (a faixa azul-clara do eixo de cima, ampliada)" : ""), W - 16);
+
+  // a geometria: mede os cabeçalhos antes de desenhar
+  const y0a = cabecalho(c, titulo1, leitura1, 22, false);
+  const p1 = { x0: 14, x1: W - 14, y0: y0a, y1: y0a + Math.round(H * 0.22) };
+  const topo2 = p1.y1 + fonte + 4 + 26;
+  const y0b = cabecalho(c, titulo2, leitura2, topo2, false);
+  const p2 = { x0: 46, x1: W - 14, y0: y0b, y1: H - 10 - fonte - 15 * rotX2.length - 2 };
+  const sx1 = v => p1.x0 + (v - st.a) / (st.b - st.a) * (p1.x1 - p1.x0);
+  const sx2 = v => p2.x0 + (v - esc.x0) / (esc.x1 - esc.x0) * (p2.x1 - p2.x0);
+
+  // 1. a lente: a faixa das médias no eixo de cima e a ligação até o gráfico de baixo
+  const bx0 = Math.max(p1.x0, sx1(esc.x0)), bx1 = Math.min(p1.x1, sx1(esc.x1));
+  g.fillStyle = "rgba(31,95,168,0.07)";
+  g.fillRect(bx0, p1.y0, bx1 - bx0, p1.y1 - p1.y0);
+  g.beginPath(); g.moveTo(bx0, p1.y1); g.lineTo(bx1, p1.y1); g.lineTo(p2.x1, p2.y0); g.lineTo(p2.x0, p2.y0); g.closePath(); g.fill();
+  g.strokeStyle = "#b8c4d6"; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(bx0, p1.y1); g.lineTo(p2.x0, p2.y0); g.moveTo(bx1, p1.y1); g.lineTo(p2.x1, p2.y0); g.stroke();
+
+  // 2. os cabeçalhos, por cima da lente
+  cabecalho(c, titulo1, leitura1, 22, true);
+  cabecalho(c, titulo2, leitura2, topo2, true);
+
+  // 3. painel de cima: a população e a amostra atual
+  const curva = []; let fmax = 0;
+  if (!pop.discreta) for (let i = 0; i <= 240; i++) { const x = st.a + (st.b - st.a) * i / 240; const f = pop.f(x); curva.push([x, f]); if (f > fmax) fmax = f; }
+  const ymax1 = pop.discreta ? 1.12 : fmax * (n <= 30 ? 1.25 : n < 300 ? 2.4 : 1.6);
+  const sy1 = v => p1.y1 - Math.min(v, ymax1) / ymax1 * (p1.y1 - p1.y0);
+  g.fillStyle = CINZA;
+  if (pop.discreta) {
+    for (const [v, p] of [[0, 0.8], [1, 0.2]]) g.fillRect(sx1(v - 0.12), sy1(p), sx1(v + 0.12) - sx1(v - 0.12), p1.y1 - sy1(p));
+  } else {
+    g.beginPath(); g.moveTo(sx1(st.a), p1.y1);
+    curva.forEach(([x, f]) => g.lineTo(sx1(x), sy1(f)));
+    g.lineTo(sx1(st.b), p1.y1); g.closePath(); g.fill();
+  }
+  let fora1 = 0;
+  if (k > 0) {
+    const am = dados.amostras[k - 1];
+    fora1 = n - am.reduce((s, v) => s + v, 0);
+    g.fillStyle = AZUL;
+    if (pop.discreta) {
+      for (const v of [0, 1]) { const p = am[v] / n; if (!p) continue; g.fillRect(sx1(v - 0.06), sy1(p), sx1(v + 0.06) - sx1(v - 0.06), p1.y1 - sy1(p)); }
+    } else if (dados.valores) {            // n pequeno: um ponto por valor, empilhados na faixa
+      const pilha = new Int32Array(NB1), raio = Math.max(2.5, Math.min(5, (sx1(st.a + st.largura1) - sx1(st.a)) / 2 - 0.5));
+      for (const v of dados.valores[k - 1]) {
+        const i = Math.floor((v - st.a) / st.largura1); if (i < 0 || i >= NB1) continue;
+        const y = p1.y1 - raio - 1 - (2 * raio + 1) * pilha[i]++; if (y < p1.y0) continue;
+        g.beginPath(); g.arc(sx1(st.a + (i + 0.5) * st.largura1), y, raio, 0, 2 * Math.PI); g.fill();
+      }
+    } else {
+      for (let i = 0; i < NB1; i++) {
+        const cnt = am[i]; if (!cnt) continue;
+        const h = cnt / n / st.largura1, xa = sx1(st.a + i * st.largura1), xb = sx1(st.a + (i + 1) * st.largura1);
+        g.fillRect(xa, sy1(h), Math.max(1, xb - xa - 1), p1.y1 - sy1(h));
+      }
+    }
+  }
+  if (pop.discreta) {                       // a probabilidade de cada valor, ao lado do topo da barra cinza
+    g.fillStyle = "#555"; g.font = `${fonte}px ${FONTE}`; g.textAlign = "right";
+    for (const [v, p, t] of [[0, 0.8, "80%"], [1, 0.2, "20%"]]) escreve(g, t, sx1(v - 0.12) - 4, sy1(p) + fonte / 2 - 1);
+  }
+  if (fora1 > 0) { g.fillStyle = VERMELHO; g.font = `600 ${fonte}px ${FONTE}`; g.textAlign = "right"; escreve(g, `${fmtInt(fora1)} ${fora1 === 1 ? "valor desta amostra ficou" : "valores desta amostra ficaram"} fora do gráfico`, p1.x1, p1.y0 + fonte); }
+  // a média da população (tracejada) e a média da amostra atual (cheia)
+  if (temTeoria) { g.strokeStyle = VERMELHO; g.setLineDash([6, 4]); g.lineWidth = 2; g.beginPath(); g.moveTo(sx1(pop.mu), p1.y0); g.lineTo(sx1(pop.mu), p1.y1); g.stroke(); g.setLineDash([]); }
+  if (k > 0 && mAtual >= st.a && mAtual <= st.b) { g.strokeStyle = VERMELHO; g.lineWidth = 2.5; g.beginPath(); g.moveTo(sx1(mAtual), p1.y0); g.lineTo(sx1(mAtual), p1.y1); g.stroke(); }
+  // eixo de cima
+  g.strokeStyle = "#333"; g.lineWidth = 1; g.beginPath(); g.moveTo(p1.x0, p1.y1); g.lineTo(p1.x1, p1.y1); g.stroke();
+  g.fillStyle = "#333"; g.font = `${fonte}px ${FONTE}`; g.textAlign = "center";
+  for (const t of (pop.discreta ? [0, 1] : ticksBonitos(st.a, st.b, W < 500 ? 4 : 6))) { if (t < st.a || t > st.b) continue; g.beginPath(); g.moveTo(sx1(t), p1.y1); g.lineTo(sx1(t), p1.y1 + 4); g.stroke(); g.fillText(fmtTick(t), sx1(t), p1.y1 + fonte + 4); }
+
+  // 4. painel de baixo: as médias
+  let maxc = 0; for (let i = 0; i < esc.nb; i++) if (st.contagens[i] > maxc) maxc = st.contagens[i];
+  const esperado = x => K * esc.w * phi((x - pop.mu) / e) / e;   // quantas médias a teoria espera na faixa em torno de x, ao fim
+  let ymax2 = Math.max(5, maxc * 1.08);
+  if (temTeoria) ymax2 = Math.max(ymax2, esperado(pop.mu) * 1.3);
+  const sy2 = v => p2.y1 - Math.min(v, ymax2) / ymax2 * (p2.y1 - p2.y0);
+  const ty = ticksBonitos(0, ymax2, 4).filter(t => t > 0 && t <= ymax2);
+  g.strokeStyle = GRADE; g.lineWidth = 1;
+  for (const t of ty) { g.beginPath(); g.moveTo(p2.x0, sy2(t)); g.lineTo(p2.x1, sy2(t)); g.stroke(); }
+  g.fillStyle = AZUL;
+  for (let i = 0; i < esc.nb; i++) {
+    const cnt = st.contagens[i]; if (!cnt) continue;
+    const xa = sx2(esc.inicio + i * esc.w), xb = sx2(esc.inicio + (i + 1) * esc.w);
+    g.fillRect(xa, sy2(cnt), Math.max(1, xb - xa - 1), p2.y1 - sy2(cnt));
+  }
+  if (temTeoria) {
+    g.strokeStyle = VERMELHO; g.lineWidth = 2.5; g.beginPath();
+    for (let i = 0; i <= 240; i++) { const x = esc.x0 + (esc.x1 - esc.x0) * i / 240; const X = sx2(x), Y = sy2(esperado(x)); if (i === 0) g.moveTo(X, Y); else g.lineTo(X, Y); }
+    g.stroke();
+    g.setLineDash([6, 4]); g.lineWidth = 2; g.beginPath(); g.moveTo(sx2(pop.mu), p2.y0); g.lineTo(sx2(pop.mu), p2.y1); g.stroke(); g.setLineDash([]);
+    // a chave marca a largura prevista: μ ± 1 erro-padrão
+    if (sx2(pop.mu + e) - sx2(pop.mu - e) > 24) {
+      const yk = p2.y0 + fonte + 12, xa = sx2(pop.mu - e), xb = sx2(pop.mu + e);
+      g.strokeStyle = "#333"; g.lineWidth = 1.5; g.beginPath();
+      g.moveTo(xa, yk - 5); g.lineTo(xa, yk + 5); g.moveTo(xa, yk); g.lineTo(xb, yk); g.moveTo(xb, yk - 5); g.lineTo(xb, yk + 5); g.stroke();
+      g.fillStyle = "#333"; g.font = `${fonte}px ${FONTE}`; g.textAlign = "center"; escreve(g, `erro-padrão = ${fmt(e)}`, sx2(pop.mu), yk - 8);
+    }
+  }
+  // a média que acabou de cair, e a ligação com o gráfico de cima
+  if (k > 0) {
+    const i = Math.floor((mAtual - esc.inicio) / esc.w);
+    if (i >= 0 && i < esc.nb) {
+      const xm = sx2(esc.inicio + (i + 0.5) * esc.w), ym = sy2(st.contagens[i]) - 6;
+      g.strokeStyle = "rgba(214,40,40,0.55)"; g.lineWidth = 1.5; g.beginPath(); g.moveTo(sx1(mAtual), p1.y1); g.lineTo(xm, p2.y0); g.stroke();
+      g.fillStyle = VERMELHO; g.beginPath(); g.arc(xm, ym, 5, 0, 2 * Math.PI); g.fill();
+    }
+  }
+  if (st.fora > 0) { g.fillStyle = VERMELHO; g.font = `600 ${fonte}px ${FONTE}`; g.textAlign = "right"; escreve(g, `${fmtInt(st.fora)} ${st.fora === 1 ? "média ficou" : "médias ficaram"} fora do gráfico`, p2.x1, p2.y0 + fonte); }
+  // eixos de baixo
+  g.strokeStyle = "#333"; g.lineWidth = 1; g.beginPath(); g.moveTo(p2.x0, p2.y0); g.lineTo(p2.x0, p2.y1); g.lineTo(p2.x1, p2.y1); g.stroke();
+  g.fillStyle = "#333"; g.font = `${fonte}px ${FONTE}`; g.textAlign = "right";
+  for (const t of ty) { g.beginPath(); g.moveTo(p2.x0 - 4, sy2(t)); g.lineTo(p2.x0, sy2(t)); g.stroke(); g.fillText(fmtInt(t), p2.x0 - 6, sy2(t) + 4); }
+  g.textAlign = "center";
+  const ticks2 = esc.nb === 2 ? [0, 1] : ticksBonitos(esc.x0, esc.x1, W < 500 ? 4 : 6);
+  for (const t of ticks2) { if (t < esc.x0 || t > esc.x1) continue; g.beginPath(); g.moveTo(sx2(t), p2.y1); g.lineTo(sx2(t), p2.y1 + 4); g.stroke(); g.fillText(fmtTick(t), sx2(t), p2.y1 + fonte + 4); }
+  rotX2.forEach((l, i) => g.fillText(l, W / 2, p2.y1 + fonte + 4 + 15 * (i + 1)));
+
+  layout = { sx1, sx2, sy2, p1, p2, st, esperado };
+  desenhaDica(g, W, fonte, d);
+  atualizaLista(st);
+}
+// ---------- o valor ao tocar ou passar o mouse ----------
+function desenhaDica(g, W, fonte, d) {
+  if (!d) return;
+  g.font = `600 ${fonte}px ${FONTE}`;
+  const linhas = quebra(g, d.texto, W - 30);                       // a dica quebra em linhas quando não cabe (celular)
+  const tw = Math.max(...linhas.map(l => g.measureText(l).width)) + 14, th = (fonte + 5) * linhas.length + 7;
+  let x = d.x + 12, y = d.y - th - 8;
+  if (x + tw > W - 4) x = d.x - tw - 12;
+  x = Math.max(4, Math.min(W - tw - 4, x));
+  if (y < 4) y = d.y + 12;
+  g.fillStyle = "rgba(255,255,255,0.96)"; g.strokeStyle = "#9aa7b8"; g.lineWidth = 1;
+  g.beginPath(); g.roundRect(x, y, tw, th, 6); g.fill(); g.stroke();
+  g.fillStyle = "#1b2330"; g.textAlign = "left";
+  linhas.forEach((l, i) => g.fillText(l, x + 7, y + fonte + 4 + (fonte + 5) * i));
+  g.beginPath(); g.arc(d.x, d.y, 3.5, 0, 2 * Math.PI); g.fill();
+}
+function achaDica(x, y) {
+  if (!layout || !estado || !dados || estado.k === 0) return null;
+  const { sx1, sx2, sy2, p1, p2, st, esperado } = layout, pop = popAtual, k = st.k, esc = st.esc;
+  if (y >= p1.y0 && y <= p1.y1 + 4 && x >= p1.x0 && x <= p1.x1) {            // a amostra atual
+    const am = dados.amostras[k - 1], plural = n === 1 ? "valor" : "valores";
+    if (pop.discreta) {
+      const v = x < sx1(0.5) ? 0 : 1, c = am[v];
+      const texto = n === 1 ? `o único valor desta amostra ${c ? "é" : "não é"} ${v}` : `o valor ${v} saiu em ${fmtInt(c)} dos ${fmtInt(n)} valores desta amostra (${fmtPct(c / n * 100)})`;
+      return { x: sx1(v), y: p1.y1 - 8, texto };
+    }
+    const i = Math.min(NB1 - 1, Math.max(0, Math.floor((x - p1.x0) / (p1.x1 - p1.x0) * NB1)));
+    const c = am[i], l = st.a + i * st.largura1, cs = casasDe(st.largura1);
+    const faixa = `entre ${fmtC(l, cs)} e ${fmtC(l + st.largura1, cs)}`;
+    const texto = n === 1 ? `o único valor desta amostra ${c ? "caiu" : "não caiu"} ${faixa}` : `${fmtInt(c)} dos ${fmtInt(n)} ${plural} desta amostra ${c === 1 ? "caiu" : "caíram"} ${faixa}`;
+    return { x: sx1(l + st.largura1 / 2), y: p1.y1 - 8, texto };
+  }
+  if (y >= p2.y0 - 4 && y <= p2.y1 + 4 && x >= p2.x0 && x <= p2.x1) {        // uma barra das médias
+    const i = Math.min(esc.nb - 1, Math.max(0, Math.floor((x - p2.x0) / (p2.x1 - p2.x0) * esc.nb)));
+    const c = st.contagens[i], l = esc.inicio + i * esc.w, cs = casasDe(esc.passo || esc.w);
+    const umValor = esc.passo && esc.w <= esc.passo * 1.0001;       // a barra cobre um único valor possível da média
+    const quem = k === 1 ? `a única média já sorteada` : `${fmtInt(c)} das ${fmtInt(k)} médias já sorteadas`;
+    const verbo = (sing, plur, neg) => k === 1 ? (c ? sing : neg) : (c === 1 ? sing : plur);
+    let t;
+    if (umValor) t = `${quem} ${verbo("é igual", "são iguais", "não é igual")} a ${fmtC(l + esc.w / 2, cs)}`;
+    else if (esc.passo) t = `${quem} ${verbo("caiu", "caíram", "não caiu")} entre ${fmtC(l + esc.passo / 2, cs)} e ${fmtC(l + esc.w - esc.passo / 2, cs)}`;
+    else t = `${quem} ${verbo("caiu", "caíram", "não caiu")} entre ${fmtC(l, cs)} e ${fmtC(l + esc.w, cs)}`;
+    if (pop.mu !== null) t += `; a teoria espera cerca de ${fmtInt(Math.round(esperado(l + esc.w / 2)))} médias ${umValor ? "com esse valor" : "nessa faixa"} ao fim das ${fmtInt(K)} amostras`;
+    return { x: sx2(l + esc.w / 2), y: sy2(c), texto: t };
+  }
+  return null;
+}
+(() => {
+  const cv = $("anim");
+  const poe = d => { if ((d && d.texto) !== (dica && dica.texto)) { dica = d; if (estado) desenha(estado, dica); } };
+  const trata = e => { const r = cv.getBoundingClientRect(); poe(achaDica(e.clientX - r.left, e.clientY - r.top)); };
+  cv.addEventListener("pointermove", trata);
+  cv.addEventListener("pointerdown", trata);
+  cv.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") poe(null); });   // no celular, o toque deixa o valor na tela
+})();
+function atualizaLista(st) {
+  if (!$("lista").open) return;
+  if (st.k > 0 && st.k < K && (++quadrosLista % 6) !== 0) return;   // durante a animação, atualiza a cada 6 quadros
+  if (!dados || st.k === 0) { $("lista_txt").textContent = "Nenhuma amostra foi sorteada ainda. Aperte Rodar para começar."; return; }
+  const txt = Array.from(dados.medias.slice(0, st.k), fmt).join("   ");
+  $("lista_txt").textContent = `${st.k < K ? `As médias das ${fmtInt(st.k)} amostras sorteadas até agora` : `As médias das ${fmtInt(K)} amostras`}, na ordem em que saíram:\n` + txt;
+}
+
+// ---------- o motor: anda por velocidade (amostras por segundo), devagar no começo, com pausa ----------
+const RITMO = 1.5, ARRANQUE = 3;   // amostras por segundo no começo; a cada ARRANQUE amostras sorteadas, o ritmo cresce de RITMO
+function pararQuadro() { if (quadro) { cancelAnimationFrame(quadro); quadro = null; } }
+function velocidade() { return RITMO * (1 + estado.k / ARRANQUE) * fator; }
+function duracao() { return ARRANQUE / RITMO * Math.log(1 + K / ARRANQUE) / fator; }   // segundos para as K amostras
+function atualizaVel() {
+  const seg = Math.round(duracao() * 10) / 10;
+  $("vel_txt").textContent = `o sorteio das ${fmtInt(K)} amostras leva cerca de ${String(seg).replace(".", ",")} segundos; as primeiras saem devagar`;
+}
+function anima() {
+  pararQuadro();
+  estado = preparaEstado(); dica = null;
+  limpaCartoes();
+  desenha(estado);
+  continuar();
+}
+function continuar() {
+  ultimo = performance.now();
+  $("pausa").textContent = "Pausar"; $("pausa").disabled = false;
+  quadro = requestAnimationFrame(quadroSeguinte);
+}
+function quadroSeguinte(agora) {
+  const dt = Math.min(0.25, (agora - ultimo) / 1000); ultimo = agora;
+  estado.acum = Math.min(K, estado.acum + dt * velocidade());
+  const ate = Math.floor(estado.acum);
+  if (ate > estado.k) { avanca(estado, ate); desenha(estado); }
+  if (estado.k < K) quadro = requestAnimationFrame(quadroSeguinte);
+  else { quadro = null; $("pausa").disabled = true; }
+}
+function pausar() {
+  if (quadro) { pararQuadro(); $("pausa").textContent = "Continuar"; quadrosLista = -1; atualizaLista(estado); }
+  else if (estado && dados && estado.k < K) continuar();
+}
+function passoAPasso() {
+  if (!estado || estado.k >= K) { pararQuadro(); estado = preparaEstado(); dica = null; limpaCartoes(); }
+  if (quadro) { pararQuadro(); $("pausa").textContent = "Continuar"; }
+  avanca(estado, estado.k + 1); estado.acum = estado.k; quadrosLista = -1; desenha(estado);
+  $("pausa").disabled = estado.k >= K; if (estado.k < K) $("pausa").textContent = "Continuar";
+}
+
 atualizaPainel();
+atualizaVel();
+estado = preparaEstado(); desenha(estado);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (estado) desenha(estado); });
 iniciar();
 </script>
 </body>
